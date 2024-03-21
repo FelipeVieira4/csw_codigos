@@ -1,0 +1,68 @@
+YYCFVCAD050	;
+	;
+	#include %CSUTICSP
+	;
+	;
+0000	do New^%CSW1UTI("sc,%PRG,CT,COD,COR,YYCFVCAD050,SN")	; Pilha de news de variaveis utilizadas nesta rotina
+	new sc,%PRG,CT,COD,COR,YYCFVCAD050,SN	; Pilha de news do Caché, deve estar igual ao new de cima
+	; Variável de sessão (%index)
+	set %PRG="YYCFVCAD050",CT=%index
+	;
+	; csw:aj:70,9,
+	do AJ^%CSUTIUD(70,9,"TESTE")		; Componente de criação da janela + titulo
+	;
+	;
+0500	set (COD,COR)=""
+	do 9000
+	;
+	;W
+1000	;
+1000ON	do ^%CSLE(2,15,3,"COD",COD,"@'?.N",1,,",,,cp1000,,,,,,,1,1")
+	quit:$$CSP^%CSW1UTI()
+1000EX	goto 9999:%=27!(%=140)
+	if $$$ISERR($$Valcp1100()) goto 1000
+	;
+	do MECABECALHO^%CSW1UTI(1)
+	do Enable^%CSW1UTI("cp1000")
+1100	;
+1100ON	do ^%CSLE(3,15,5,"COR",COR,"@?.N",1,,",,,cp1100")
+	quit:$$CSP^%CSW1UTI()
+1100EX	goto 9999:%=27!(%=140)
+	;
+	;
+9000	do Clear^%CSW1UTI()					; Label 9000 é padrão de label para montar a tela e controlar campos e botões (habilita e desabilitar)
+	do Disable^%CSW1UTI()
+	;
+	do BtnManter^%CSW1D(1)
+	;
+	quit
+	;
+	;
+9999	do FJ^%CSUTIUD					; Label 9999 é padrão para fechar a janela [fim da rotina]
+	do FJ^%CSW1UTI
+	;
+	quit
+	;
+	;
+Valcp1100()
+	quit $$$OK
+	;
+Validate()
+	quit $$$OK
+Show(%cswP1,%cswP2,%cswP3,%cswP4)	;			; Label Show, padrão de label para execução inicial da rotina de interface
+	do Show^%CSW1UTI("YYCFVCAD050",$get(%cswP1),$get(%cswP2),$get(%cswP3),$get(%cswP4))
+	;
+	quit
+	;						; Abaixo estão as tags de CSW e CSP da rotina
+	;						; Perceba que estas tags ficam comentadas, com ";"
+	;						; Todas estas tags e componentes utilizadas na rotina estão documentadas na wiki de treinamento!
+	; Tags CSW
+	;
+	; csw:label:1,2,14,Código *
+	; csw:label:1,3,14,Cor *
+	; 
+	; csw:btnManter:7,4,Salvar^YYCFVCAD050,1000^YYCFVCAD050,Excluir^YYCFVCAD050
+	;
+	; csw:labelcreate:YYCFVCAD050
+	; csw:labeldestroy:9999
+	; csw:csp:gerar
