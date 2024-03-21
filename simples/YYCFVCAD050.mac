@@ -3,37 +3,60 @@ YYCFVCAD050	;
 	#include %CSUTICSP
 	;
 	;
-0000	do New^%CSW1UTI("sc,%PRG,CT,COD,COR,YYCFVCAD050,SN")	; Pilha de news de variaveis utilizadas nesta rotina
-	new sc,%PRG,CT,COD,COR,YYCFVCAD050,SN	; Pilha de news do Caché, deve estar igual ao new de cima
+0000	do New^%CSW1UTI("sc,%PRG,CT,COD,YYCFVCAD050,SN")	; Pilha de news de variaveis utilizadas nesta rotina
+	new sc,%PRG,CT,COD,YYCFVCAD050,SN	; Pilha de news do Caché, deve estar igual ao new de cima
 	; Variável de sessão (%index)
 	set %PRG="YYCFVCAD050",CT=%index
 	;
 	; csw:aj:70,9,
-	do AJ^%CSUTIUD(70,9,"TESTE")		; Componente de criação da janela + titulo
+	do AJ^%CSUTIUD(70,9,"Cadastro de Item")		; Componente de criação da janela + titulo
 	;
 	;
-0500	set (COD,COR)=""
+0500	set (COD,YYCFVCAD050)=""
 	do 9000
 	;
-	;W
-1000	;
-1000ON	do ^%CSLE(2,15,3,"COD",COD,"@'?.N",1,,",,,cp1000,,,,,,,1,1")
+	;
+	;	CODIGO
+1000
+1000ON	;
+	do ^%CSLE(3,15,3,"COD",COD,"@'?.N",1,,",F7CODIGO^YYCFVCAD050,,cp1000,,,,,,,1,1")
 	quit:$$CSP^%CSW1UTI()
 1000EX	goto 9999:%=27!(%=140)
-	if $$$ISERR($$Valcp1100()) goto 1000
+	if $$$ISERR($$Valcp1000()) goto 1000
 	;
-	do MECABECALHO^%CSW1UTI(1)
 	do Enable^%CSW1UTI("cp1000")
-1100	;
-1100ON	do ^%CSLE(3,15,5,"COR",COR,"@?.N",1,,",,,cp1100")
+	;
+	;
+1100	;	COR
+1100ON	do ^%CSLE(4,15,8,"$piece(YYCFVCAD050,Z,1)",$piece(YYCFVCAD050,Z,1),"@?.N",1,,",,,cp1100")
 	quit:$$CSP^%CSW1UTI()
 1100EX	goto 9999:%=27!(%=140)
 	;
+	if $$$ISERR($$Valcp1100()) goto 1100
+	;
+1200	;	NOME
+1200ON	do ^%CSLE(5,15,8,"$piece(YYCFVCAD050,Z,2)",$piece(YYCFVCAD050,Z,2),,1,,",,,cp1200")
+	quit:$$CSP^%CSW1UTI()
+1200EX	goto 9999:%=27!(%=140)
+	if '$$Valcp1200() goto 1200
+	;
+	;
+2999	do Focus^%CSW1UTI(%PRG,"btSalvar")
+	quit
+	;
+	;
+Salvar	if '$$Validate() quit
+	set sc=$$GravarItem^YYCFVCAD050RG(COD,YYCFVCAD050)
+	if $$$ISERR(sc) do MECABECALHO^%CSW1UTI("Codigo nao pode estar nulo") goto 0500
+	;
+	do MECABECALHO^%CSW1UTI("Registro "_COD_" salvo com sucesso!")	; Componente de apresantação de mensagem de confirmação ao salvar
+	goto 0500
+	;
 	;
 9000	do Clear^%CSW1UTI()					; Label 9000 é padrão de label para montar a tela e controlar campos e botões (habilita e desabilitar)
-	do Disable^%CSW1UTI()
+	do Enable^%CSW1UTI()
 	;
-	do BtnManter^%CSW1D(1)
+	do BtnManter^%CSW1D(2)
 	;
 	quit
 	;
@@ -44,11 +67,40 @@ YYCFVCAD050	;
 	quit
 	;
 	;
+Excluir	do SN^%CSUTIUD(,,,2,,"ExcluirSN1^YYCFVCAD050")
+	quit:$$CSP^%CSW1UTI()
+	;
+ExcluirSN1	;
+	if SN'="S"  goto 1000
+	set sc=$$ExcluirItem^YYCFVCAD050RG(COD)
+	if $$$ISERR(sc) do MECABECALHO^%CSW1UTI("Item não encontrado") goto 1000
+	do MECABECALHO^%CSW1UTI(2)
+	goto 0500
+	;
+	;
+Valcp1000()
+	if $get(COD)="" quit 0
+	quit $$$OK
 Valcp1100()
+	if $piece($get(YYCFVCAD050),Z,1)="" quit 0
+	quit $$$OK
+Valcp1200()
+	if $piece($get(YYCFVCAD050),Z,2)="" quit 0
 	quit $$$OK
 	;
+	;
 Validate()
+	if '$$Valcp1000() do MECABECALHO^%CSW1UTI("CODIGO INVALIDO") quit 0
+	if '$$Valcp1100() do MECABECALHO^%CSW1UTI("COR INVALIDA") quit 0
+	if '$$Valcp1200() do MECABECALHO^%CSW1UTI("NOME INVALIDO") quit 0
 	quit $$$OK
+	;
+	;
+F7CODIGO	do ^%CSUTIPE("5,15,15,7,10","1,2","COR,NOME",10,"^YYCFVCAD050(@1",,,,,,"F7CODIGOPE^YYCFVCAD050")
+	quit:$$CSP^%CSW1UTI()
+F7CODIGOPE    do SetF7^%CSW1UTI(%codret) quit
+	;
+	;
 Show(%cswP1,%cswP2,%cswP3,%cswP4)	;			; Label Show, padrão de label para execução inicial da rotina de interface
 	do Show^%CSW1UTI("YYCFVCAD050",$get(%cswP1),$get(%cswP2),$get(%cswP3),$get(%cswP4))
 	;
@@ -57,11 +109,12 @@ Show(%cswP1,%cswP2,%cswP3,%cswP4)	;			; Label Show, padrão de label para execu�
 	;						; Perceba que estas tags ficam comentadas, com ";"
 	;						; Todas estas tags e componentes utilizadas na rotina estão documentadas na wiki de treinamento!
 	; Tags CSW
-	;
-	; csw:label:1,2,14,Código *
-	; csw:label:1,3,14,Cor *
+	; csw:label:1,1,14,Programa armazenamento de items *
+	; csw:label:1,3,14,Código *
+	; csw:label:1,4,14,Cor *
+	; csw:label:1,5,14,Nome *
 	; 
-	; csw:btnManter:7,4,Salvar^YYCFVCAD050,1000^YYCFVCAD050,Excluir^YYCFVCAD050
+	; csw:btnManter:7,7,Salvar^YYCFVCAD050,0500^YYCFVCAD050,Excluir^YYCFVCAD050
 	;
 	; csw:labelcreate:YYCFVCAD050
 	; csw:labeldestroy:9999
