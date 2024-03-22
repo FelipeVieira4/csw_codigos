@@ -1,5 +1,6 @@
 YYCFVBILCSW10	;Rescrevendo os exércicios da biblioteca em caché CSW (YYCFVBIBILIOTECA10-Cadatro usuario)
 	#include %CSUTICSP
+	;
 0000	do New^%CSW1UTI("sc,%PRG,CT,COD,YYCFVBILCSW10,CONFSENHA,SN")
 	new sc,%PRG,CT,COD,YYCFVBILCSW10,SN,CONFSENHA
 	;
@@ -66,11 +67,15 @@ YYCFVBILCSW10	;Rescrevendo os exércicios da biblioteca em caché CSW (YYCFVBIBI
 2999	do Focus^%CSW1UTI(%PRG,"btSalvar")
 	quit
 	;
-3000	quit
+3000	if '$$Validate() quit
+	set sc = $$CadastraUsuario^YYCFVBILCSW10RG(COD,YYCFVBILCSW10)
+	if $$$ISERR(sc) do MECABECALHO^%CSW1UTI("ERRO não foi possível gravar usuario")
+	quit
 	;
 	;
 	;
-9000	do ClearCp^%CSW1UTI()
+9000	do Clear^%CSW1UTI()
+	do Clear^%CSW1UTI()
 	do Enable^%CSW1UTI()
 	;
 	do BtnManter^%CSW1D(2)
@@ -82,27 +87,44 @@ YYCFVBILCSW10	;Rescrevendo os exércicios da biblioteca em caché CSW (YYCFVBIBI
 	;
 	;
 	;
-Valcp1000 if ($get(COD)="")!(COD?.N'=1) quit 0
+Valcp1000() if ($get(COD)="")!(COD?.N'=1) quit 0
 	quit $$$OK
 	;
-Valcp1100	;
+Valcp1100()	;
 	if ($piece(YYCFVBILCSW10,Z,1)="")!($piece(YYCFVBILCSW10,Z,1)?.N=1) quit 0
 	quit $$$OK
 	;
-Valcp1200	;
+Valcp1200()	;
 	if ($piece(YYCFVBILCSW10,Z,2)="")!($piece(YYCFVBILCSW10,Z,2)?.N=1) quit 0
-	if '$$VerEmail^%CSUTICSP(email) quit 0
+	do MECABECALHO^%CSW1UTI("Email inválido")
+	;
 	quit $$$OK
 	;
-Valcp1300	;
-	if ($piece(YYCFVBILCSW10,Z,3)="")!($piece(YYCFVBILCSW10,Z,3)?.N=1) quit 0
-	if '$$ValidarSenha^YYCFVBILCSW10($piece(YYCFVBILCSW10,Z,3)) quit 0
+Valcp1300()	;
+	quit $$ValidarSenha^YYCFVBILCSW10RG($piece(YYCFVBILCSW10,Z,3)) quit 0
+	if ($piece(YYCFVBILCSW10,Z,2)="")!($piece(YYCFVBILCSW10,Z,2)?.N=1) quit 0
+	do MECABECALHO^%CSW1UTI("Email inválido")
+	;
 	quit $$$OK
-Valcp1400	;
-	if $piece(YYCFVBILCSW10,Z,3)=CONFSENHA do MECABECALHO^%CSW1UTI("Senhas não batem") quit $$$OK
+	;
+Valcp1400()	;
+	if $piece(YYCFVBILCSW10,Z,3)=CONFSENHA quit $$$OK
+	do MECABECALHO^%CSW1UTI("Senhas não batem")
 	quit 0
 	;
-F7CODIGO	quit
+Validate()	;
+	if '$$Valcp1000()  do MECABECALHO^%CSW1UTI("Codigo invalído") quit 0
+	if '$$Valcp1100()  do MECABECALHO^%CSW1UTI("Nome invalído") quit 0
+	if '$$Valcp1200()  do MECABECALHO^%CSW1UTI("Email invalído") quit 0
+	if '$$Valcp1300()  do MECABECALHO^%CSW1UTI("Senha invalído") quit 0
+	if '$$Valcp1400()  quit 0
+	quit $$$OK
+	;
+	;
+	;
+F7CODIGO	do ^%CSUTIPE("2,15,15,10","1,2,3","USUARIOS,NOME,EMAIL,SENHA",10,"^YYCFVBILCSW10(@1",,,,,,"F7CODIGOPE^YYCFVBILCSW10")
+	quit:$$CSP^%CSW1UTI()
+F7CODIGOPE    do SetF7^%CSW1UTI(%codret) quit
 	;
 Show(%cswP1,%cswP2,%cswP3,%cswP4)	;			; Label Show, padrão de label para execução inicial da rotina de interface
 	do Show^%CSW1UTI("YYCFVBILCSW10",$get(%cswP1),$get(%cswP2),$get(%cswP3),$get(%cswP4))
