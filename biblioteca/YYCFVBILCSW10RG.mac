@@ -1,0 +1,28 @@
+YYCFVBILCSW10RG	;
+	#include %CSUTICSP
+	;
+PegarMaiorCod(cod)	;
+	$$$VAR
+	set cod = $order(^YYCFVBILCSW10(""),-1)
+	quit $$$OK
+	;
+UsuarioExiste(cod)
+	$$$VAR
+	if $get(^YYCFVBILCSW10(cod))'="" quit $$$OK
+	quit 0
+	;
+ObterUsuario(cod,yyCfvBilCsw10RG)
+	$$$VAR
+	set yyCfvBilCsw10RG = ^YYCFVBILCSW10(cod)
+	quit $$$OK
+	;
+ValidarSenha(senha)	;Validar Senha
+	if ($get(senha)="")!($length($get(senha))<8) quit 0
+	set letrasEspeciais = $translate($zconvert(senha,"L"),"qwertyuiopasdfghjklzxcvbnm1234567890")
+	if $get(letrasEspeciais)="" quit 0
+	if $translate(senha,"1234567890")="" quit 0	;so tem números
+	if $translate($zconvert(senha,"L"),"qwertyuiopasdfghjklzxcvbnm"_letrasEspeciais)="" quit 0	;so tem letras
+	if $translate(senha,"qwertyuiopasdfghjklzxcvbnm"_letrasEspeciais_"1234567890")="" quit 0	;so tem as letras minusculas
+	if $translate(senha,"QWERTYUIOPASDFGHJKLZXCVBNM"_letrasEspeciais_"1234567890")="" quit 0	;so tem as letras maiosculas
+	quit 1
+	;

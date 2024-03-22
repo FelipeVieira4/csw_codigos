@@ -1,0 +1,124 @@
+YYCFVBILCSW10	;Rescrevendo os exércicios da biblioteca em caché CSW (YYCFVBIBILIOTECA10-Cadatro usuario)
+	#include %CSUTICSP
+0000	do New^%CSW1UTI("sc,%PRG,CT,COD,YYCFVBILCSW10,CONFSENHA,SN")
+	new sc,%PRG,CT,COD,YYCFVBILCSW10,SN,CONFSENHA
+	;
+	set %PRG="YYCFVBILCSW10",CT=%index
+	; csw:aj:70,9,
+	do AJ^%CSUTIUD(,,"Cadastro de Usuario")		; Componente de criação da janela + titulo
+	;
+	;
+0500	set (sc,COD,YYCFVBILCSW10,CONFSENHA)=""
+	do 9000
+	;
+1000	;	CÓDIGO
+1000ON	do ClearCp^%CSW1UTI("ds1000")
+	do PegarMaiorCod^YYCFVBILCSW10RG(.COD)
+	set COD = COD+1	;incrementar 1
+	do Set^%CSW1UTI(%PRG,"cp1000",COD)
+	do ^%CSLE(1,15,3,"COD",COD,"@'?.N",1,,",F7CODIGO^YYCFVBILCSW10,,cp1000")
+	;
+	quit:$$CSP^%CSW1UTI()
+1000EX	goto 9999:%=27!(%=140)
+	;
+	if '$$Valcp1000() goto 1000
+	if $$UsuarioExiste^YYCFVBILCSW10RG(COD) do
+	. do ObterUsuario^YYCFVBILCSW10RG(COD,YYCFVBILCSW10)
+	. do Set^%CSW1UTI(%PRG,"cp1100",$piece(YYCFVBILCSW10,Z,1))	;nome
+	. do Set^%CSW1UTI(%PRG,"cp1100",$piece(YYCFVBILCSW10,Z,2))	;email
+	. do Set^%CSW1UTI(%PRG,"cp1200",$piece(YYCFVBILCSW10,Z,3))	;senha
+	;
+1100	;	NOME
+1100ON	do ClearCp^%CSW1UTI("ds1100")
+	do ^%CSLE(2,15,22,"$piece(YYCFVBILCSW10,Z,1)",$piece(YYCFVBILCSW10,Z,1),"@?.N",1,,",,,cp1100")
+	quit:$$CSP^%CSW1UTI()
+1100EX	goto 9999:%=27!(%=140)
+	;
+	if '$$Valcp1100() goto 1100
+	;
+	;
+1200	;	EMAIL
+1200ON	do ClearCp^%CSW1UTI("ds1200")
+	do ^%CSLE(3,15,22,"$piece(YYCFVBILCSW10,Z,2)",$piece(YYCFVBILCSW10,Z,2),"@?.N",1,,",,,cp1200")
+	quit:$$CSP^%CSW1UTI()
+1200EX	goto 9999:%=27!(%=140)
+	;
+	if '$$Valcp1200() goto 1200
+	;
+1300	;
+1300ON	do ClearCp^%CSW1UTI("ds1300")
+	do ^%CSLE(4,15,8,"$piece(YYCFVBILCSW10,Z,3)",$piece(YYCFVBILCSW10,Z,3),"@?.N",1,,",,,cp1300")
+	quit:$$CSP^%CSW1UTI()
+1300EX	goto 9999:%=27!(%=140)
+	;
+	if '$$Valcp1300() goto 1200
+	;
+1400	;
+1400ON	do ClearCp^%CSW1UTI("ds1400")
+	do ^%CSLE(5,15,8,"CONFSENHA",CONFSENHA,"@?.N",1,,",,,cp1400")
+	quit:$$CSP^%CSW1UTI()
+1400EX	goto 9999:%=27!(%=140)
+	;
+	if '$$Valcp1400() goto 1400
+	;
+	;
+	;
+2999	do Focus^%CSW1UTI(%PRG,"btSalvar")
+	quit
+	;
+3000	quit
+	;
+	;
+	;
+9000	do ClearCp^%CSW1UTI()
+	do Enable^%CSW1UTI()
+	;
+	do BtnManter^%CSW1D(2)
+	quit
+	;
+	;
+9999	do FJ^%CSUTIUD
+	do FJ^%CSW1UTI
+	;
+	;
+	;
+Valcp1000 if ($get(COD)="")!(COD?.N'=1) quit 0
+	quit $$$OK
+	;
+Valcp1100	;
+	if ($piece(YYCFVBILCSW10,Z,1)="")!($piece(YYCFVBILCSW10,Z,1)?.N=1) quit 0
+	quit $$$OK
+	;
+Valcp1200	;
+	if ($piece(YYCFVBILCSW10,Z,2)="")!($piece(YYCFVBILCSW10,Z,2)?.N=1) quit 0
+	if '$$VerEmail^%CSUTICSP(email) quit 0
+	quit $$$OK
+	;
+Valcp1300	;
+	if ($piece(YYCFVBILCSW10,Z,3)="")!($piece(YYCFVBILCSW10,Z,3)?.N=1) quit 0
+	if '$$ValidarSenha^YYCFVBILCSW10($piece(YYCFVBILCSW10,Z,3)) quit 0
+	quit $$$OK
+Valcp1400	;
+	if $piece(YYCFVBILCSW10,Z,3)=CONFSENHA do MECABECALHO^%CSW1UTI("Senhas não batem") quit $$$OK
+	quit 0
+	;
+F7CODIGO	quit
+	;
+Show(%cswP1,%cswP2,%cswP3,%cswP4)	;			; Label Show, padrão de label para execução inicial da rotina de interface
+	do Show^%CSW1UTI("YYCFVBILCSW10",$get(%cswP1),$get(%cswP2),$get(%cswP3),$get(%cswP4))
+	;
+	quit
+	;
+	;
+	; Tags CSW
+	; csw:label:1,1,14,Código *
+	; csw:label:1,2,14,Nome *
+	; csw:label:1,3,14,Email *
+	; csw:label:1,4,14,Senha *
+	; csw:label:1,5,14,Confirma Senha *
+	; 
+	; csw:btnManter:4,7,3000^YYCFVBILCSW10,0500^YYCFVBILCSW10,Excluir^YYCFVBILCSW10
+	;
+	; csw:labelcreate:YYCFVBILCSW10
+	; csw:labeldestroy:9999
+	; csw:csp:gerar
