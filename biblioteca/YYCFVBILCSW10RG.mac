@@ -11,6 +11,12 @@ UsuarioExiste(cod)
 	if $get(^YYCFVBILCSW10(cod))'="" quit $$$OK
 	quit 0
 	;
+CadastraUsuario(cod,yyCfvBilCsw10RG)
+	if $get(cod) = ""
+	;
+	set ^YYCFVBILCSW10(cod) = yyCfvBilCsw10RG
+	quit $$$OK
+	;
 ObterUsuario(cod,yyCfvBilCsw10RG)
 	$$$VAR
 	set yyCfvBilCsw10RG = ^YYCFVBILCSW10(cod)
@@ -24,5 +30,11 @@ ValidarSenha(senha)	;Validar Senha
 	if $translate($zconvert(senha,"L"),"qwertyuiopasdfghjklzxcvbnm"_letrasEspeciais)="" quit 0	;so tem letras
 	if $translate(senha,"qwertyuiopasdfghjklzxcvbnm"_letrasEspeciais_"1234567890")="" quit 0	;so tem as letras minusculas
 	if $translate(senha,"QWERTYUIOPASDFGHJKLZXCVBNM"_letrasEspeciais_"1234567890")="" quit 0	;so tem as letras maiosculas
+	quit 1
+	;
+ValidarEmail(email)	;Validar email
+	if ($get(email)="")!($get(email)?.N=1) quit 0
+	;Validar se tem, 1-@, 1-. e não tem email registrado na global
+	if ($length($get(email),"@")-1'=1)!($length($get(email),".")-1'=1)!($get(^YYCFVCADUSU(email))'="") quit 0
 	quit 1
 	;
