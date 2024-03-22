@@ -9,7 +9,7 @@ YYCFVCAD050	;
 	set %PRG="YYCFVCAD050",CT=%index
 	;
 	; csw:aj:70,9,
-	do AJ^%CSUTIUD(70,9,"Cadastro de Item")		; Componente de criação da janela + titulo
+	do AJ^%CSUTIUD(,,"Cadastro de Item")		; Componente de criação da janela + titulo
 	;
 	;
 0500	set (COD,YYCFVCAD050)=""

@@ -1,0 +1,36 @@
+YYCFVCAD070RG	;
+	#include %CSUTICSP
+	;
+PegarUltimoCod(cod)	;
+	set cod = $order(^YYCFVCAD070(""),-1)
+	if $get(cod)="" set cod = 0
+	quit $$$OK
+	;
+ExcluirUsuario(COD)	;
+	$$$VAR
+	if $get(COD)="" quit 0
+	kill ^YYCFVCAD070(COD)
+	quit $$$OK
+	;
+GravarUsuario(cod,yyCfvCad070)
+	if $get(cod)="" quit 0
+	set ^YYCFVCAD070(cod) = yyCfvCad070
+	quit $$$OK
+	;
+ExisteUsuario(cod)
+	if $get(^YYCFVCAD070(cod))'="" quit $$$OK
+	quit 0 
+ObterUsuario(cod,yyCfvCad070)
+	set yyCfvCad070 = ^YYCFVCAD070(cod)
+	quit $$$OK
+	;
+ObterTabCargo(tabCargo)
+	$$$VAR
+	kill tabCargo
+	;
+	set tabCargo(1) = "Dev Back-End"
+	set tabCargo(2) = "Dev Front-End"
+	set tabCargo(3) = "Dev FullStack"
+	;
+	;
+	quit $$$OK

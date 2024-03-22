@@ -1,0 +1,63 @@
+YYHOCAD050RG	; 09/2021 - CADASTRO DE FUNCIONÁRIO EM CSW (REGRAS)
+	;
+	#include %CSUTICSP					; Inicialização das macros utilizadas na rotina ($$$VAR, $$$OK, $$$ERROR) <ok>
+	;
+	; Gravar Funcionário
+	;
+GravarFuncionario(codEmpresa,codigo,yyhoCad050)	;		; Regra de gravar funcionário na minha global
+	$$$VAR
+	new sc
+	;
+	set sc=$$ValidarGravarFuncionario(codEmpresa,codigo,yyhoCad050)	; Chamada de regra de validar, caso ocorra erro, sai antes de gravar
+	if $$$ISERR(sc) quit sc
+	;
+	set ^YYHOCAD050(codEmpresa,codigo)=yyhoCad050
+	;
+	quit $$$OK
+	;
+	; Validar Gravar Funcionário
+	;
+ValidarGravarFuncionario(codEmpresa,codigo,yyhoCad050)	;		; Regra de validar, implemente seus metodos e validações aqui
+	$$$VAR
+	;
+	if $get(codigo)="" quit $$$ERROR(10000,"Código do funcionário não informado!")
+	;
+	quit $$$OK
+	;
+	; Obter Dados do Funcionário
+	;
+ObterFuncionario(codEmpresa,codigo,yyhoCad050)	;			; Regra de obter dados do funcionário. Ao mesmo tempo ela valida a existencia do registro
+	$$$VAR
+	;
+	set yyhoCad050=""
+	;
+	if '$data(^YYHOCAD050(codEmpresa,codigo)) quit $$$ERROR(10000,"Funcionário "_codigo_" não cadastrado!")
+	;
+	set yyhoCad050=$get(^YYHOCAD050(codEmpresa,codigo))
+	;
+	quit $$$OK
+	;
+	; Excluir Funcionário
+	;
+ExcluirFuncionario(codEmpresa,codigo)	;				; Regra de excluir o funcionário
+	$$$VAR
+	new sc
+	;
+	set sc=$$ValidarExcluirFuncionario(codEmpresa,codigo)		; Perceba a chamada de regra para validar antes de excluir
+	if $$$ISERR(sc) quit sc
+	;
+	kill ^YYHOCAD050(codEmpresa,codigo)
+	;
+	quit $$$OK
+	;
+	; Validar Excluir Funcionário
+	;
+ValidarExcluirFuncionario(codEmpresa,codigo)	;			; Regra de validar excluir: implemente seus metodos e validações aqui
+	$$$VAR
+	;
+	if $get(codigo)="" quit $$$ERROR(10000,"Código do funcionário não informado!")
+	;
+	quit $$$OK
+	;							; Abaixo tag csw e csp para utilização no compilador de rotinas
+	;
+	; csw:csp:naogerar

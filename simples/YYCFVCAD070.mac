@@ -1,0 +1,138 @@
+YYCFVCAD070	;
+	;
+	#include %CSUTICSP
+	;
+	;
+0000	do New^%CSW1UTI("sc,%PRG,CT,COD,YYCFVCAD070,SN")	; Pilha de news de variaveis utilizadas nesta rotina
+	new sc,%PRG,CT,COD,YYCFVCAD070,SN	; Pilha de news do Caché, deve estar igual ao new de cima
+	; Variável de sessão (%index)
+	set %PRG="YYCFVCAD070",CT=%index
+	;
+	; csw:aj:70,9,
+	do AJ^%CSUTIUD(,,"Cadastro de Item")		; Componente de criação da janela + titulo
+	;
+	set sc=$$ObterTabCargo^YYCFVCAD070RG(.TABCARGO)
+	;
+0500	set (COD,YYCFVCAD070)=""
+	do 9000
+	;
+	;
+	;	CODIGO
+1000	;
+1000ON	do ClearCp^%CSW1UTI("ds1000")
+	do PegarUltimoCod^YYCFVCAD070RG(.COD)
+	set COD = COD+1
+	do Set^%CSW1UTI(%PRG,"cp1000",COD)
+	do ^%CSLE(1,15,3,"COD",COD,"@'?.N",1,,",F7CODIGO^YYCFVCAD070,,cp1000")
+	;
+	quit:$$CSP^%CSW1UTI()
+1000EX	goto 9999:%=27!(%=140)
+	if $$$ISERR($$Valcp1000()) goto 1000
+	if $$ExisteUsuario^YYCFVCAD070RG(.COD)  do
+	. do ObterUsuario^YYCFVCAD070RG(COD,.YYCFVCAD070)
+	. do Set^%CSW1UTI(%PRG,"cp1100",$piece(YYCFVCAD070,Z,1))
+	. do Set^%CSW1UTI(%PRG,"cp1200",$piece(YYCFVCAD070,Z,2))
+	. do Set^%CSW1UTI(%PRG,"cp1300",$piece(YYCFVCAD070,Z,3))
+	;
+	;
+1100	;	Nome
+1100ON	do ClearCp^%CSW1UTI("ds1100")
+	do ^%CSLE(2,15,8,"$piece(YYCFVCAD070,Z,1)",$piece(YYCFVCAD070,Z,1),,1,,",,,cp1100")
+	quit:$$CSP^%CSW1UTI()
+1100EX	goto 9999:%=27,1000:%=140
+	;
+	if $$$ISERR($$Valcp1100()) goto 1100
+	;
+1200	;	Idade
+1200ON	;do ClearCp^%CSW1UTI("ds1200")
+	do ^%CSLE(3,15,8,"$piece(YYCFVCAD070,Z,2)",$piece(YYCFVCAD070,Z,2),"@'?.N",1,,",,,cp1200")
+	quit:$$CSP^%CSW1UTI()
+1200EX	goto 9999:%=27,1100:%=140
+	if '$$Valcp1200() goto 1200
+	;
+1300	;	Cargo
+1300ON	do ClearCp^%CSW1UTI("ds1300")
+	do ^%CSLE(4,15,10,"$piece(YYCFVCAD070,Z,3)",$piece(YYCFVCAD070,Z,3),,,,",,,cp1300",,,,,1,.TABCARGO)
+	quit $$CSP^%CSW1UTI()
+1300EX	goto 9999:%=27,1200:%=140
+	;
+	;
+2999	do Focus^%CSW1UTI(%PRG,"btSalvar")
+	quit
+	;
+	;
+Salvar	if $$$ISERR($$Validate()) quit
+	if $$ExisteUsuario^YYCFVCAD070RG(COD)  do
+	. do MECABECALHO^%CSW1UTI("Usuario:"_$piece(YYCFVCAD070,Z,1)_" editado")
+	else  do MECABECALHO^%CSW1UTI("Usuario:"_$piece(YYCFVCAD070,Z,1)_" cadastrado")
+	do GravarUsuario^YYCFVCAD070RG(COD,YYCFVCAD070)
+	quit
+	;
+	;
+9000	do Clear^%CSW1UTI()					; Label 9000 é padrão de label para montar a tela e controlar campos e botões (habilita e desabilitar)
+	do Enable^%CSW1UTI()
+	;
+	do BtnManter^%CSW1D(2)
+	do InicializaCombo^%CSW1A("cp1300",.TABCARGO,0,0,,,1)
+	;
+	quit
+	;
+	;
+9999	do FJ^%CSUTIUD					; Label 9999 é padrão para fechar a janela [fim da rotina]
+	do FJ^%CSW1UTI
+	;
+	quit
+	;
+	;
+	;
+Excluir	do SN^%CSUTIUD(,,,2,,"ExcluirSN1^YYCFVCAD070")
+	quit:$$CSP^%CSW1UTI()
+	;
+ExcluirSN1	;
+	if SN'="S"  goto 0500
+	set sc=$$ExcluirUsuario^YYCFVCAD070RG(COD)
+	if $$$ISERR(sc) do MECABECALHO^%CSW1UTI("Item não encontrado") goto 0500
+	do MECABECALHO^%CSW1UTI(2)
+	goto 0500
+	;
+Valcp1000()
+	if $get(COD)="" quit 0
+	quit $$$OK
+Valcp1100()
+	if $piece($get(YYCFVCAD070),Z,1)="" quit 0
+	quit $$$OK
+Valcp1200()
+	if $piece($get(YYCFVCAD070),Z,2)="" quit 0
+	quit $$$OK
+	;
+	;
+Validate()
+	if '$$Valcp1000() do MECABECALHO^%CSW1UTI("Código Inválido") quit 0
+	if '$$Valcp1100() do MECABECALHO^%CSW1UTI("Nome Inválido") quit 0
+	if '$$Valcp1200() do MECABECALHO^%CSW1UTI("Idade Inválido") quit 0
+	quit $$$OK
+	;
+	;
+F7CODIGO	do ^%CSUTIPE("5,15,15,7,10","1,2,3","USUARIOS,NOME,IDADE,CARGO",10,"^YYCFVCAD070(@1",,,,,,"F7CODIGOPE^YYCFVCAD070")
+	quit:$$CSP^%CSW1UTI()
+F7CODIGOPE    do SetF7^%CSW1UTI(%codret) quit
+	;
+	;
+Show(%cswP1,%cswP2,%cswP3,%cswP4)	;			; Label Show, padrão de label para execução inicial da rotina de interface
+	do Show^%CSW1UTI("YYCFVCAD070",$get(%cswP1),$get(%cswP2),$get(%cswP3),$get(%cswP4))
+	;
+	quit
+	;						; Abaixo estão as tags de CSW e CSP da rotina
+	;						; Perceba que estas tags ficam comentadas, com ";"
+	;						; Todas estas tags e componentes utilizadas na rotina estão documentadas na wiki de treinamento!
+	; Tags CSW
+	; csw:label:1,1,14,Código *
+	; csw:label:1,2,14,Nome *
+	; csw:label:1,3,14,Idade *
+	; csw:label:1,4,14,Cargo *
+	; 
+	; csw:btnManter:4,6,Salvar^YYCFVCAD070,0500^YYCFVCAD070,Excluir^YYCFVCAD070
+	;
+	; csw:labelcreate:YYCFVCAD070
+	; csw:labeldestroy:9999
+	; csw:csp:gerar
