@@ -1,0 +1,43 @@
+YYHOCAD650RG	; 09/2021 - CONSULTA DE FUNCIONÁRIOS
+	;
+	#include %CSUTICSP
+	;
+	; Gerar Grid
+	;
+GerarGrid(codEmpresa,term,prg)	;
+	$$$VAR
+	new sc,codigo
+	;
+	set (codigo)=""
+	;
+	for  set codigo=$order(^YYHOCAD050(codEmpresa,codigo)) quit:codigo=""  do
+	. ;
+	. set sc=$$GerarGridLinha(codEmpresa,term,prg,codigo)
+	;
+	quit $$$OK
+	;
+	; Gravar Grid
+	;
+GerarGridLinha(codEmpresa,term,prg,codigo,codRegistro)	;
+	$$$VAR
+	new sc,yyhoCad050,dados,display,detalha
+	;
+	set sc=$$ObterFuncionario^YYHOCAD050RG(codEmpresa,codigo,.yyhoCad050)
+	if $$$ISERR(sc) quit sc
+	;
+	set (dados,display,detalha)=""
+	;
+	set $piece(dados,z,1)=codigo
+	set $piece(dados,z,2)=$piece(yyhoCad050,z,1)
+	set $piece(dados,z,3)=$piece(yyhoCad050,z,2)
+	set $piece(dados,z,4)=$piece(yyhoCad050,z,3)
+	set $piece(dados,z,5)=$piece(yyhoCad050,z,4)
+	set $piece(dados,z,6)=$piece(yyhoCad050,z,5)
+	;
+	set $piece(detalha,z,1)=codigo	
+	;
+	set sc=$$GravarLinhas^%CSW1GRID(term,prg,1,dados,display,detalha,$get(codRegistro),,,,,,1)
+	;
+	quit $$$OK
+	;
+	; csw:csp:naogerar

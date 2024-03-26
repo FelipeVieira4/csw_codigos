@@ -1,0 +1,41 @@
+YYCFVGRID020RG	; ?? 03/2024  - SEM TÍTULO - REGRAS
+	;
+	#include %CSUTICSP
+	;
+GerarGrid(term,prg)	;
+	$$$VAR
+	new sc,codigo
+	;
+	set (codigo)=""
+	;
+	for  set codigo=$order(^YYCFVBILCSW20(codigo)) quit:codigo=""  do
+	. ;
+	. set sc=$$GerarGridLinha(term,prg,codigo)
+	;
+	quit $$$OK
+	;
+	; Gravar Grid
+	;
+GerarGridLinha(term,prg,codigo,codRegistro)	;
+	$$$VAR
+	new sc,yyCfbCilCsw20,dados,display,detalha
+	;
+	set sc=$$ObterInformacoesLivro^YYCFVBILCSW20RG(codigo,.yyCfbCilCsw20)
+	if $$$ISERR(sc) quit sc
+	;
+	set (dados,display,detalha)=""
+	;
+	set $piece(dados,z,1)=codigo
+	set $piece(dados,z,2)=$piece(yyCfbCilCsw20,z,1)
+	set $piece(dados,z,3)=$piece(yyCfbCilCsw20,z,2)
+	set $piece(dados,z,4)=$piece(yyCfbCilCsw20,z,3)
+	set $piece(dados,z,5)=$piece(yyCfbCilCsw20,z,4)
+	set $piece(dados,z,6)=$piece(yyCfbCilCsw20,z,5)
+	;
+	set $piece(detalha,z,1)=codigo	
+	;
+	set sc=$$GravarLinhas^%CSW1GRID(term,prg,1,dados,display,detalha,$get(codRegistro),,,,,,1)
+	;
+	quit $$$OK
+	;
+	; csw:csp:naogerar

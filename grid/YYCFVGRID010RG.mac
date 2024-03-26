@@ -1,0 +1,73 @@
+YYCFVGRID010RG	; ?? 03/2024  - SEM TÍTULO - REGRAS
+	;
+	#include %CSUTICSP
+	;
+	;
+GerarGrid(codEmpresa,codTerminal,rotina,codGrid)	;
+	$$$VAR
+	new codigo,sc
+	;
+	; Global utilizada apenas para testar a manutenção, substituir "^GLOBALTESTE" pela global a ser utilizada
+	;kill ^GLOBALTESTE
+	;
+	;
+	set codigo=""
+	for  set codigo=$order(^YYCFVGRID010(codEmpresa,codigo)) quit:codigo=""  do
+	. ;
+	. set sc=$$GerarGridLinha(codEmpresa,codTerminal,rotina,codGrid,codigo)
+	;
+	quit $$$OK
+	;
+	; Gerar Grid Linha
+	;
+GerarGridLinha(codEmpresa,codTerminal,rotina,codGrid,codigo,codRegistro)	;
+	$$$VAR
+	new NOME,dados,detalha,display,GLOBALTESTE,sc,DESCRICAO
+	;
+	set tempYYCFVGRID010=$get(^YYCFVGRID010(codEmpresa,codigo))
+	;
+	set NOME=$piece(tempYYCFVGRID010,z,1)
+	set DESCRICAO=$piece(tempYYCFVGRID010,z,2)
+	;
+	set $piece(dados,z,1)=codigo
+	set $piece(dados,z,2)=NOME
+	set $piece(dados,z,3)=DESCRICAO
+	;
+	;
+	set $piece(display,z,1)=codigo
+	set $piece(display,z,2)=NOME
+	set $piece(display,z,3)=DESCRICAO
+	;
+	set $piece(detalha,z,1)=codigo
+	set $piece(detalha,z,2)=NOME
+	set $piece(detalha,z,3)=DESCRICAO
+	;
+	set sc=$$GravarLinhas^%CSW1GRID(codTerminal,rotina,codGrid,dados,display,detalha,$get(codRegistro))
+	;
+	quit $$$OK
+	;
+	; Gravar Global Manutenção
+	;
+GravarGridGlobal(codEmpresa,codTerminal,rotina,codGrid,codigo,NOME,DESCRICAO)	;
+	$$$VAR
+	new tempYYCFVGRID010
+	;
+	set tempYYCFVGRID010=$get(^YYCFVGRID010(codEmpresa,codigo))
+	;
+	set $piece(tempYYCFVGRID010,z,1)=NOME
+	set $piece(tempYYCFVGRID010,z,2)=DESCRICAO
+	;
+	do $$$SetG(^YYCFVGRID010(codEmpresa,codigo),tempYYCFVGRID010)
+	;
+	quit $$$OK
+	;
+	; Excluir
+	;
+Excluir(codEmpresa,codigo)	;
+	$$$VAR
+	;
+	do $$$KillG(^YYCFVGRID010(codEmpresa,codigo))
+	;
+	quit $$$OK
+	;
+	; csw:csp:naogerar
