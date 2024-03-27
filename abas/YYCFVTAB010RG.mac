@@ -1,0 +1,17 @@
+YYCFVTAB010RG	; MÊS/ANO - REGRAS ROTINA EXEMPLO COM ABA
+	;
+	#include %CSUTICSP
+	;
+	; Gerar Abas
+	;
+GerarAbas()	;
+	$$$VAR
+	new sheet
+	;
+	set sheet(1)="YYCFVGRIDTAB020^Aba 1"
+	;
+	do criarTabPanel^%CSW1A("sheet1",1,1,37,22,.sheet)
+	;
+	quit $$$OK
+	;
+	; csw:csp:naogerar

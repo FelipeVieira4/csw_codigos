@@ -1,0 +1,57 @@
+YYCFVTAB010	; MÊS/ANO - ROTINA EXEMPLO COM ABA
+	;
+	; Não esquecer:
+	; 9999	do execLabelTabPanel^%CSW1A("sheet1","9999^GCCOPVSCCSW")
+	; csw:labelseltab:0500
+	;
+	#include %CSUTICSP
+	;
+0000 	do New^%CSW1UTI("%PRG,sc,CT,CODIGO,CODREG,DETALHA,LINHA,OP,OPCOES,TABGRID,CE,YYCFVGRIDTAB020")
+	new %PRG,sc,CT,CODIGO,CODREG,DETALHA,LINHA,OP,OPCOES,TABGRID,CE,YYCFVGRIDTAB020
+	;
+	set %PRG="YYCFVTAB010",CT=%index
+	;
+	set sc=$$GerarAbas^YYCFVTAB010RG()
+	;
+	; csw:aj:68,13,
+	do AJ^%CSUTIUD(68,13,"Título Rotina")
+	;
+0500	do 9000
+	;
+	quit
+	;
+	; Montar Tela
+	;
+9000	do HabilitarTabAll^%CSW1A("sheet1")
+	do selecionarTab^%CSW1A("sheet1",1)
+	;
+	quit
+	;
+	; Fim
+	;
+9999	do removerTabPanel^%CSW1A("sheet1")
+	;
+	do FJ^%CSUTIUD
+	do FJ^%CSW1UTI
+	;
+	quit
+	;
+	; Método Validate()
+	;
+Validate()	;
+	quit $$$OK
+	;
+	; Método Show()
+	;
+Show(%cswP1,%cswP2,%cswP3,%cswP4)	;
+	do Show^%CSW1UTI("YYCFVTAB010",$get(%cswP1),$get(%cswP2),$get(%cswP3),$get(%cswP4)) quit
+	;
+	; Método TbCellClick()
+	;
+TbCellClick(%cswLin,%cswCol)	;
+	;
+	quit
+	;
+	; csw:labelcreate:YYCFVTAB010
+	; csw:labeldestroy:9999
+	; csw:csp:gerar

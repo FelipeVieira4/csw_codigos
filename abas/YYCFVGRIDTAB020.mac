@@ -1,0 +1,229 @@
+YYCFVGRIDTAB020	; MÊS/ANO - ROTINA EXEMPLO COM ABA - ABA 1
+	;
+	#include %CSUTICSP
+	;
+0000	quit
+	;	
+0500	set (CODPRO)=""
+	;
+	do 9000
+	;
+2000	if '$$Validate() quit:$$CSP^%CSW1UTI()
+	;
+	do AG^%CSUTIUD(,"2000AG^YYCFVGRIDTAB020")
+	quit:$$CSP^%CSW1UTI()
+	;
+2000AG	set sc=$$Limpar^%CSW1GRID(CT,%PRG,1)
+	set sc=$$GerarGrid^YYCFVGRID020RG(CT,%PRG,1)
+	;
+	do FJAG^%CSW1UTI
+	;
+	set sc=$$Movimentar^%CSW1GRID(CT,%PRG,1,,1)
+	;
+	; Barra de Opções
+3000	do Focus^%CSW1GRID3(CT,%PRG,1,1)
+	;
+	; Obter Dados Linha
+	;
+3050	set sc=$$ObterDadosLinha^%CSW1GRID(CT,%PRG,1,,.DETALHA,.LINHA,.CODREG)
+	
+	set CE=$piece(DETALHA,Z,1)
+	set CODIGO=$piece(DETALHA,Z,2)
+	set $piece(YYCFVGRIDTAB020,Z,1)=$piece(DETALHA,Z,3)	;Nome
+	set $piece(YYCFVGRIDTAB020,Z,2)=$piece(DETALHA,Z,4)	;Descrição
+	set $piece(YYCFVGRIDTAB020,Z,3)=$piece(DETALHA,Z,5)	;Preço
+	;
+	quit
+	;
+	; Incluir
+SALVAR	set OP="I"
+	;
+	set sc=$$IncluirLinha^%CSW1GRID2(CT,%PRG,1)
+	if $$$ISERR(sc) do ME^%CSUTICSP(sc) quit
+	;
+	goto 4000
+	;
+	; Excluir
+	;
+Excluir	set OP="E"
+	;
+	do 3050
+	;
+	do SN^%CSUTIUD(,,,"Deseja remover a opção selecionada?","S","ExcluirSN^YYCFVGRIDTAB020")
+	quit:$$CSP^%CSW1UTI()
+	;
+ExcluirSN	if SN'="S" quit
+	;
+	set sc=$$Excluir^YYCFVGRID020RG(CE,CODIGO)
+	set sc=$$ExcluirLinha^%CSW1GRID2(CT,%PRG,1,,,,CODREG)
+	;
+	do MECABECALHO^%CSW1UTI("Removido com Sucesso!")
+	;
+	quit
+	;
+4000	set sc=$$ModoManutencao^%CSW1GRID(CT,%PRG,1,1)
+	;
+	if OP="" set OP="M"
+	;
+	do 3050
+	;
+	;
+	; # Código
+4100	;
+4100ON	do ^%CSLE(LINHA,1,1,"CE",CE,"@'?.N",1,,",,,cp4100,,,,,,0,3,3,1")
+	quit:$$CSP^%CSW1UTI()
+	;
+4100EX	goto 4999:%=27,4999:%=140
+	if '$$Valcp4100() goto 4100
+	;
+	; # Código
+4200	;
+4200ON	do ^%CSLE(LINHA,2,1,"CODIGO",CODIGO,"@'?.N",1,,",,,cp4200,,,,,,0,3,3,1")
+	quit:$$CSP^%CSW1UTI()
+	;
+4200EX	goto 4999:%=27,4999:%=140
+	if '$$Valcp4200() goto 4200
+	;
+	; # NOME
+4300	;
+4300ON	do ^%CSLE(LINHA,3,16,"$piece(YYCFVGRIDTAB020,Z,1)",$piece(YYCFVGRIDTAB020,Z,1),,,,",,1,cp4300,,,,,,0,3,3,1")
+	quit:$$CSP^%CSW1UTI()
+	;
+4300EX	goto 4999:%=27,4200:%=140
+	if '$$Valcp4300() goto 4300
+	;
+4400	; # DESCRIÇÃO
+4400ON	do ^%CSLE(LINHA,4,16,"$piece(YYCFVGRIDTAB020,Z,2)",$piece(YYCFVGRIDTAB020,Z,2),,,,",,1,cp4400,,,,,,0,3,3,1")
+	quit:$$CSP^%CSW1UTI()
+	;
+4400EX	goto 4999:%=27,4300:%=140
+	if '$$Valcp4400() goto 4400
+	;
+	;
+	; Campo
+4500	;
+4500ON	do ^%CSLE(LINHA,5,16,"$piece(YYCFVGRIDTAB020,Z,3)",$piece(YYCFVGRIDTAB020,Z,3),"@'?.N",1,,",,1,cp4500,,,,,,0,3,3,1")
+	quit:$$CSP^%CSW1UTI()
+4500EX	goto 4999:%=140,4400:%=27
+	;
+	if '$$Valcp4500() goto 4500
+	;
+4350	set sc=$$GravarGridGlobal^YYCFVGRID020RG(CE,CT,%PRG,1,CODIGO,YYCFVGRIDTAB020)
+	set sc=$$GerarGridLinha^YYCFVGRID020RG(CE,CT,%PRG,1,CODIGO,CODREG)
+	;
+	set sc=$$AtualizarLinhaGrid^%CSW1GRID2(CT,%PRG,1,LINHA,CODREG)
+	set sc=$$Movimentar^%CSW1GRID(CT,%PRG,1,141)
+	;
+	if OP="I" do MECABECALHO^%CSW1UTI("Adicionado com Sucesso!")
+	else   if OP="M" do MECABECALHO^%CSW1UTI("Editado com Sucesso!")
+4999	;
+	set sc=$$ModoManutencao^%CSW1GRID(CT,%PRG,1,0,0)
+	set OP=""
+	;
+	quit
+	;
+	; Tela
+	;
+9000	do Clear^%CSW1UTI()
+	do Enable^%CSW1UTI()
+	do BtnConsultar^%CSW1D(1)
+	;
+	set (CODIGO,OP,YYCFVGRIDTAB020)=""
+	set CE = 8
+	;
+	; Se utilizar botões ao invés das opções, descomentar as linhas abaixo
+	do HabBotGeral^%CSW1("btIncluir",1)
+	do HabBotGeral^%CSW1("btManutenco",1)
+	do HabBotGeral^%CSW1("btExcluir",1)
+	;
+	kill TABGRID
+	;
+	set TABGRID(1)="; csw:gridConf:cod=1; TamTab=46.7; LinPos=0.22; LinIni=2; LinFim=20; Altura=18; Espaço=1; LabelEdit=TbCellClick^YYCFVGRIDTAB020;"
+	set TABGRID(1,1)="; csw:gridCols:cod=1;	Tipo=n; Csw=2^Código Emp^1^^^1;"
+	set TABGRID(1,2)="; csw:gridCols:cod=1;	Tipo=n; Csw=1^Código^2^^^1;"
+	set TABGRID(1,3)="; csw:gridCols:cod=1;	Tipo=a; Csw=4^Nome^3^^^1;"
+	set TABGRID(1,4)="; csw:gridCols:cod=1;	Tipo=a; Csw=4^Descrição^4^^^1;"
+	set TABGRID(1,5)="; csw:gridCols:cod=1;	Tipo=vD; Csw=4^Preço^5^^^1;"
+	;
+	set sc=$$AtuConfGrid^%CSW1GRID2(CT,%PRG,1,.TABGRID)
+	set sc=$$Inicializar^%CSW1GRID(CT,%PRG,1,.TABGRID)
+	;
+	quit
+	;
+	; Fim
+9999	set sc=$$Finalizar^%CSW1GRID(CT,%PRG,1)
+	do execLabelTabPanel^%CSW1A("sheet1","9999^ROTINA")
+	;
+	quit
+
+	;
+	; Método valcp1000() - Código do Produto
+	; 
+Valcp1000()	;
+	quit $$$OK
+	;
+	; Método Validate()
+	;
+	; Método Valcp4100() - Código
+	;
+Valcp4100()	;
+	do TbSet^%CSW1UTI(LINHA,1,CE,,,,,1)
+	;
+	quit $$$OK
+	;
+	; Método Valcp4200() - NOME
+	;
+Valcp4200()	;
+	do TbSet^%CSW1UTI(LINHA,2,CODIGO,,,,,1)
+	;
+	quit $$$OK
+	;
+Valcp4300()	;
+	do TbSet^%CSW1UTI(LINHA,3,$piece(YYCFVGRIDTAB020,Z,1),,,,,1)
+	;
+	quit $$$OK
+	;
+	;
+Valcp4400()	;
+	do TbSet^%CSW1UTI(LINHA,4,$piece(YYCFVGRIDTAB020,Z,2),,,,,1)
+	quit $$$OK
+	;
+Valcp4500()	;
+	do TbSet^%CSW1UTI(LINHA,4,$piece(YYCFVGRIDTAB020,Z,3),,,,,1)
+	quit $$$OK
+	; 
+Validate()	;
+	quit $$$OK
+	;
+	; Método Show()
+	; 
+	; 
+Show(%cswP1,%cswP2,%cswP3,%cswP4)	;
+	do Show^%CSW1UTI("YYCFVGRIDTAB020",$get(%cswP1),$get(%cswP2),$get(%cswP3),$get(%cswP4)) quit
+	;
+	;
+TbCellClick(%cswLin,%cswCol)	;
+	;
+	; Para entrar na linha ao clicar, trocar:
+	; "goto 3000"
+	; 
+	; para
+	;
+	; "do 3000
+	; set OP="M" goto 4000"
+	;
+	goto 3000
+	;
+	; Método FocusGrid()
+	;
+FocusGrid	do Focus^%CSW1GRID3(CT,%PRG,1,1) quit
+	;
+	; csw:botao:0,21.4,btIncluir,<u>I</u>ncluir,I,SALVAR^YYCFVGRIDTAB020,adicionar,,4
+	; csw:botao:4,21.4,btManutencao,<u>M</u>anutenção,M,4000^YYCFVGRIDTAB020,editar,,4
+	; csw:botao:8,21.4,btExcluir,<u>E</u>xcluir,E,Excluir^YYCFVGRIDTAB020,excluir,,4
+	;
+	; csw:labelseltab:0500
+	; csw:labelcreate:YYCFVGRIDTAB020
+	; csw:labeldestroy:9999
+	; csw:csp:gerar
+
