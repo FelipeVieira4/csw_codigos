@@ -1,0 +1,268 @@
+YYCFVPV600	; MÊS/ANO - TÍTULO
+	;
+	#include %CSUTICSP
+	;
+0000	do New^%CSW1UTI("%PRG,CT,%codret,CODREG,LINHA,SN,TABGRID,sc,codCliente,codPedido,TABCLI,TABPED,CODCLIDET,CODPEDDET,DETALHA")
+	new %PRG,CT,%codret,CODREG,LINHA,SN,TABGRID,sc,codCliente,codPedido,TABCLI,TABPED,CODCLIDET,CODPEDDET,DETALHA
+	;
+	set %PRG="YYCFVPV600",CT=%index
+	;
+	set sc=$$ValidarExecucaoCSW^%CSUTIRG001()
+	if $$$ISERR(sc) do ME^%CSUTICSP(sc) goto 9999
+	;
+	; csw:aj:108,28
+	do AJ^%CSUTIUD(,,"Consulta do Cliente em Pedidos de Venda em Aberto")
+	;
+	;
+0500	do 9000
+	;
+	;
+1000	do ClearCp^%CSW1UTI("ds1000")
+	;
+1000ON	do ^%CSLE(1,10,8,"codCliente",,,,,",F7OBSERVACAO^YYCFVPV600,,cp1000")
+	quit:$$CSP^%CSW1UTI()
+	;
+1000EX	goto 9999:%=27 ,1000:(%=140)
+	if '$$Valcp1000() goto 1000
+	;
+	;
+	if codCliente="" set codCliente="0"
+	;
+	;
+	if '$data(TABCLI(codCliente)) goto 1000INC
+	;
+	; - Excluir
+	;
+	do SN^%CSUTIUD(,,,"Código de cliente já selecionado! Deseja excluir?","N","1000SN^YYCFVPV600")
+	quit:$$CSP^%CSW1UTI()
+	;
+1000SN	goto 1000:(%=27)!(SN="N")!(%=140)
+	;
+	kill TABCLI(codCliente)
+	;
+	goto 1000
+	;
+	; - Incluir
+	;
+1000INC	do SN^%CSUTIUD(,,,,,"1000INCSN^YYCFVPV600")
+	quit:$$CSP^%CSW1UTI()
+	;
+1000INCSN	;
+	goto 1000:(%=27)!(SN="N")!(%=140)
+	set TABCLI(codCliente)=""
+	;
+	goto 1000
+	;
+	;
+1100	do ClearCp^%CSW1UTI("ds1100")
+	;
+1100ON	do ^%CSLE(2,10,8,"codPedido",,,,,",F7PEDIDOS^YYCFVPV600,,cp1100")
+	quit:$$CSP^%CSW1UTI()
+	;
+1100EX	goto 9999:%=27,1000:(%=140)
+	if '$$Valcp1100() goto 1100
+	;
+	if codPedido="" goto 2000
+	;
+	if '$data(TABPED(codCliente,codPedido)) goto 1100INC ; (EX: 1050)
+	;
+	; - Excluir
+	;
+	do SN^%CSUTIUD(,,,"Código pedido já selecionado! Deseja excluir?","N","1100SN^YYCFVPV600")
+	quit:$$CSP^%CSW1UTI()
+	;
+1100SN	goto 1100:(%=27)!(SN="N")!(%=140)
+	;
+	kill TABPED(codCliente,codPedido)
+	;
+	goto 1100
+	;
+	; - Incluir
+	;
+1100INC	do SN^%CSUTIUD(,,,,,"1100INCSN^YYCFVPV600")
+	quit:$$CSP^%CSW1UTI()
+	;
+1100INCSN	;
+	goto 1100:(%=27)!(SN="N")!(%=140)
+	;
+	set TABPED(codCliente,codPedido)=""
+	if '$data(TABCLI(codCliente)) set TABCLI(codCliente)=""
+	;
+	goto 1100
+	;
+1999	do Focus^%CSW1UTI(%PRG,"btConsultar",,1)
+	quit:$$CSP^%CSW1UTI()
+	;
+2000	;
+	set sc=$$Limpar^%CSW1GRID(CT,%PRG,1)
+	;
+	do AG^%CSUTIUD(,"2000AG^YYCFVPV600")
+	quit:$$CSP^%CSW1UTI()
+	;
+	;
+2000AG	set sc=$$GerarGlobalTrabalho^YYCFVPV600RG(CE,CT,.TABCLI,.TABPED)
+	set sc=$$GravarGrid^YYCFVPV600RG(CE,CT,%PRG,1)
+	do FJAG^%CSW1UTI
+	;
+	set sc=$$ValidarDisplay^%CSW1GRID(CT,%PRG,1)
+	if $$$ISERR(sc) do ME^%CSUTICSP(sc) goto 1100
+	;
+	set sc=$$Movimentar^%CSW1GRID(CT,%PRG,1,,1)
+	;
+	goto FocusGrid
+	;
+3050	set sc=$$ObterDadosLinha^%CSW1GRID(CT,%PRG,1,,.DETALHA,.LINHA,.CODREG)
+	set CODCLIDET=$piece(DETALHA,Z,1)
+	set CODPEDDET=$piece(DETALHA,Z,3)
+	;
+	quit
+	;
+	; Tela
+	;
+9000	do Clear^%CSW1UTI()
+	do Enable^%CSW1UTI()
+	;
+	set (codCliente,codPedido,TABCLI,TABPED,CODCLIDET,CODPEDDET,DETALHA)=""
+	;
+	if ($data(TABCLI))!($data(TABPED)) do LimparSelecionados^YYCFVPV600RG(CT,.TABCLI,.TABPED)
+	;	Limpar valores caso ja tenham sido usado  
+	;
+	; Grid
+	;
+	set sc=$$Limpar^%CSW1GRID(CT,%PRG,1)
+	;
+	kill TABGRID(1)
+	;
+	set TABGRID(1)="; csw:gridConf:cod=1; LinPos=4; Altura=20; LinIni=4; LinFim=20; LabelEdit=TbCellClick^YYCFVPV600; HabilitaNavegacao=1;"
+	;
+	set TABGRID(1,1)="; csw:gridCols:cod=1; Tipo=n; Csw=15^Cliente^1;"
+	set TABGRID(1,2)="; csw:gridCols:cod=1; Tipo=a; Csw=15^Descrição Cliente^2;"
+	set TABGRID(1,3)="; csw:gridCols:cod=1; Tipo=n; Csw=10^Pedido^3;"
+	set TABGRID(1,4)="; csw:gridCols:cod=1; Tipo=d; Csw=10^Data de Previsão do Faturamento^4;"
+	set TABGRID(1,5)="; csw:gridCols:cod=1; Tipo=n; Csw=15^Representante^5;"
+	set TABGRID(1,6)="; csw:gridCols:cod=1; Tipo=a; Csw=25^Descrição do representante^6;"
+	set TABGRID(1,7)="; csw:gridCols:cod=1; Tipo=a; Csw=20^Situação^7;"
+	;
+	set sc=$$Inicializar^%CSW1GRID(CT,%PRG,1,.TABGRID)
+	;
+	quit
+	;
+	;
+	;
+9500	do 3050
+	if ($get(CODCLIDET)="")!($get(CODPEDDET)="") do 
+	. do ME^%CSUTICSP("Valores inválidos")
+	else  do
+	. do Show^YYCFVPV100("9500EX^YYCFVPV600","(CODCLIDET,CODPEDDET)")
+	. quit:$$CSP^%CSW1UTI()
+	;
+9500EX	goto FocusGrid
+	;
+	;
+	; Fim
+	;
+9999	set sc=$$Finalizar^%CSW1GRID(CT,%PRG,1)
+	do ExcluirGlobalTrabalho^YYCFVPV600RG(CT)
+	;
+	do LimparGlobais^YYCFVPV600RG(CT)
+	;
+	do FJ^%CSW1UTI
+	;
+	quit
+	;
+	;
+F7OBSERVACAO	;
+	do ^%CSUTIMB("Todos;Selecionados","%codret","Opções",,,,,,,,,"ESCOLHERF7^YYCFVPV600")
+	quit:$$CSP^%CSW1UTI()
+	quit
+	;
+ESCOLHERF7
+	if %=27 do SetF7^%CSW1UTI("") quit
+	if %codret=1 do
+	. do GerarF7Clientes^YYCFVPV600RG(CE,CT)
+	. do ^%CSUTIPE("2,30","1","Clientes,Nome Cliente",10,"^mtempYYCFVPV600F7Clientes(CT,@.",,,,,,"F7PE^YYCFVPV600")
+	. quit:$$CSP^%CSW1UTI()
+	else  do
+	. do GerarF7ClientesSelecionados^YYCFVPV600RG(CE,CT,.TABCLI)
+	. do ^%CSUTIPE("2,30","1","Clientes,Nome Cliente",10,"^mtempYYCFVPV600F7Clientes(CT,@.",,,,,,"F7PE^YYCFVPV600")
+	quit:$$CSP^%CSW1UTI()
+	quit
+	;
+F7PEDIDOS	;
+	do ^%CSUTIMB("Todos;Selecionados","%codret","Opções",,,,,,,,,"ESCOLHERF7PED^YYCFVPV600")
+	quit:$$CSP^%CSW1UTI()
+	quit
+	;
+ESCOLHERF7PED
+	if %=27 do SetF7^%CSW1UTI("") quit
+	if %codret=1 do
+	. do GerarF7Pedidos^YYCFVPV600RG(CE,CT,.TABCLI)
+	. do ^%CSUTIPE("2,25,25","1,2","PEDIDOS,Nome Cliente,Nome Representante",10,"^mtempYYCFVPV600F7Pedidos(CT,@.",,,,,,"F7PE^YYCFVPV600")
+	. quit:$$CSP^%CSW1UTI()
+	else  do
+	. do GerarF7PEDSelecionados^YYCFVPV600RG(CE,CT,.TABPED)
+	. do ^%CSUTIPE("2,25,25","1,2","PEDIDOS,Nome Cliente,Nome Representante",10,"^mtempYYCFVPV600F7Pedidos(CT,@.",,,,,,"F7PE^YYCFVPV600")
+	quit:$$CSP^%CSW1UTI()
+	quit
+	;
+F7PE	do SetF7^%CSW1UTI(%codret) quit
+	;
+	;
+	; Método Valcp1000() - Validar Código Cliente
+	;
+Valcp1000()	;
+	$$$VAR
+	new sc
+	set sc = 1
+	if $get(codCliente)="" quit $$$OK
+	if ('$data(^PVCL(CE,codCliente)))!('$data(^YYPVPDOBS(CE,codCliente))) do
+	. set sc=0
+	. do ME^%CSUTICSP("Código cliente inválido")
+	quit sc
+	;
+	; Método Valcp1200() - Validar Código Pedido
+	;
+Valcp1100()	;
+	$$$VAR
+	new sc
+	set sc = 1
+	if $get(codPedido)="" quit $$$OK
+	if ('$data(^PVCL(CE,codCliente,codPedido)))!('$data(^YYPVPDOBS(CE,codCliente,codPedido))) do
+	. set sc=0
+	. do ME^%CSUTICSP("Código cliente/pedido inválido")
+	quit sc
+	;
+	;
+Validate()	;
+	if '$$Valcp1000() do Focus^%CSW1UTI(%PRG,"cp1000") quit 0
+	if '$$Valcp1100() do Focus^%CSW1UTI(%PRG,"cp1100") quit 0
+	;
+	quit $$$OK
+	;
+	;
+	; Método Show()
+	;
+Show(%cswP1,%cswP2,%cswP3,%cswP4)	;
+	do Show^%CSW1UTI("YYCFVPV600",$get(%cswP1),$get(%cswP2),$get(%cswP3),$get(%cswP4)) quit
+	;
+	; Método TbCellClick()
+	;
+TbCellClick(%cswLin,%cswCol)	;
+	;
+	goto FocusGrid
+	;
+	; Método FocusGrid()
+	;
+FocusGrid	do Focus^%CSW1GRID3(CT,%PRG,1,1) quit
+	;
+	; csw:label:1,1,8,Código Cliente*
+	; csw:label:1,2,8,Código Pedido*
+	; 
+	;
+	; csw:botao:98,1,btConsultar,C<u>o</u>nsultar,o,2000^YYCFVPV600,consultar,Consultar,10
+	; csw:botao:98,2,btLimpar,<u>L</u>impar,l,0500^YYCFVPV600,apagar,Limpar,10
+	; csw:botao:85,1,btObservar,<u>O</u>bservação do Cliente,l,9500^YYCFVPV600,Observação do Cliente,Observar,10
+	;
+	; csw:labelcreate:YYCFVPV600
+	; csw:labeldestroy:9999
+	; csw:csp:gerar

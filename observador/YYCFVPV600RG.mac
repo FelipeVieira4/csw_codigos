@@ -1,0 +1,246 @@
+YYCFVPV600RG	; MÊS/ANO - TÍTULO
+	;
+	#include %CSUTICSP
+	;
+	; Excluir Global Trabalho
+	;
+ExcluirGlobalTrabalho(codTerminal)	;
+	$$$VAR
+	;
+	kill ^mtempYYCFVPV600(codTerminal)
+	;
+	quit $$$OK
+	;
+	; Gerar Global Trabalho
+	;
+GerarGlobalTrabalho(codEmpresa,codTerminal,tabCli,tabPed)	;
+	$$$VAR
+	kill ^mtempYYCFVPV600(codTerminal)
+	;
+	new codCliente,codPedido,sc
+	;
+	set (codCliente,codPedido,sc)=""
+	;
+	if $data(tabCli("0")) goto PEGARTODOS
+	;
+	for  set codCliente=$order(tabCli(codCliente)) quit:codCliente=""  do
+	. if $data(tabPed(codCliente)) do	;Pegar pedidos especificos desse cliente
+	. . ;			
+	. . for  set codPedido=$order(tabPed(codCliente,codPedido)) quit:codPedido=""  do
+	. . . set ^mtempYYCFVPV600(codTerminal,codCliente,codPedido)=$get(^YYPVPDOBS(codEmpresa,codCliente,codPedido))
+	. else  do	;Pegar todo os pedidos relacionado a esse cliente
+	. . for  set codPedido=$order(^YYPVPDOBS(codEmpresa,codCliente,codPedido)) quit:codPedido=""  do
+	. . . set ^mtempYYCFVPV600(codTerminal,codCliente,codPedido)=$get(^YYPVPDOBS(codEmpresa,codCliente,codPedido))
+	;
+	quit $$$OK
+	;
+PEGARTODOS; Pegar todos os cliente
+	for  set codCliente=$order(^YYPVPDOBS(codEmpresa,codCliente)) quit:codCliente=""  do
+	. for  set codPedido=$order(^YYPVPDOBS(codEmpresa,codCliente,codPedido)) quit:codPedido=""  do
+	. . set ^mtempYYCFVPV600(codTerminal,codCliente,codPedido)=$get(^YYPVPDOBS(codEmpresa,codCliente,codPedido))
+	;
+	quit $$$OK
+	;
+	; Gravar Grid
+	;
+GravarGrid(codEmpresa,codTerminal,rotina,codGrid,codRegistro)	;
+	$$$VAR
+	new codClie,codPedi,sc
+	;
+	; # Obter codRegistro
+	set codRegistro=$get(codRegistro)
+	;
+	; # Leitura na mtemp
+	set (codClie,codPedi,sc)=""
+	for  set codClie=$order(^mtempYYCFVPV600(codTerminal,codClie)) quit:codClie=""  do
+	. for  set codPedi=$order(^mtempYYCFVPV600(codTerminal,codClie,codPedi)) quit:codPedi=""  do
+	. . ;
+	. . set sc=$$AtualizarLinhaGrid(codEmpresa,codTerminal,rotina,codClie,codPedi,codGrid,codRegistro)
+	;
+	quit $$$OK
+	;
+	; Atualizar Linha Grid
+	;
+AtualizarLinhaGrid(codEmpresa,codTerminal,rotina,codCli,codPed,codGrid,codRegistro)	;
+	$$$VAR
+	new corFonte,corFundo,dados,detalha,display,mtempYYCFVPV600,negrito,sc,FTCL,PVPD,FTRE,valorSit,valorParaSit
+	;
+	; # Inicializar variáveis
+	set (dados,display,detalha,corFundo,corFonte,negrito,sc,FTCL,PVPD,FTRE,valorSit,valorParaSit)=""
+	;
+	; # Obter dados da mtemp
+	set mtempYYCFVPV600=$get(^mtempYYCFVPV600(codTerminal,codCli,codPed))
+	set sc=$$VerCliente^CCFTRG001(codEmpresa,codCli,.FTCL)
+	if $$$ISERR(sc) quit sc
+	set sc=$$VerPedido^CCPVRG001(codEmpresa,codPed,,.PVPD)
+	if $$$ISERR(sc) quit sc
+	set sc=$$VerRepresentante^CCFTRG001(codEmpresa,$piece(PVPD,Z,2),.FTRE)
+	if $$$ISERR(sc) quit sc
+	;
+	; # Dados
+	set $piece(dados,z,1)=codCli
+	set $piece(dados,z,2)=$piece($get(FTCL),Z,2)
+	set $piece(dados,z,3)=codPed
+	set $piece(dados,z,4)=$piece($get(PVPD),Z,6)
+	set $piece(dados,z,5)=$piece(PVPD,Z,2)
+	set $piece(dados,z,6)=$piece(FTRE,Z,1)
+	;
+	;
+	;	Poderia ser melhor
+	set valorSit = $piece(PVPD,Z,12)
+	if valorSit=0 set valorParaSit ="- DIGITADO"
+	if valorSit=1 set valorParaSit ="- LISTADO"
+	if valorSit=2 set valorParaSit ="- LIBERADO"
+	if valorSit=3 set valorParaSit ="- SELECIONADO PARCIAL"
+	if valorSit=4 set valorParaSit ="- SELECIONADO TOTAL"
+	if valorSit=5 set valorParaSit ="- FATURADO PARCIAL"
+	if valorSit=6 set valorParaSit ="- FATURADO TOTAL"
+	if valorSit=7 set valorParaSit ="- TRANSMITIDO"
+	if valorSit=8 set valorParaSit ="- BLOQUEADO"
+	if valorSit=9 set valorParaSit ="- CANCELADO"
+	;
+	set $piece(dados,z,7)=valorSit_valorParaSit
+	; # Display
+	set display = dados
+	set $piece(display,z,4)=$zdate($piece(dados,z,4),4)
+	;
+	; # Detalha
+	set detalha = dados
+	;
+	set sc=$$GravarLinhas^%CSW1GRID(codTerminal,rotina,codGrid,dados,display,detalha,codRegistro,corFundo,corFonte,negrito)
+	;
+	quit $$$OK
+	;
+	;
+	;
+	; Gerar F7 Clientes
+	;
+GerarF7Clientes(codEmpresa,codTerminal)    ;
+	$$$VAR
+	new ftcl,sc,codCliente,codPedido,mtempYYCFVPV600F7Clientes
+	set (ftcl,sc,codCliente,codPedido,mtempYYCFVPV600F7Clientes) = ""
+	;
+	; # Matar mtemp
+	kill ^mtempYYCFVPV600F7Clientes(codTerminal)
+	;	
+	; # Leitura na global
+	for  set codCliente=$order(^YYPVPDOBS(codEmpresa,codCliente)) quit:codCliente=""  do
+	. ; # Obter descrição do cliente
+	. set sc=$$VerCliente^CCFTRG001(codEmpresa,codCliente,.ftcl)
+	. ; # Gravar dados
+	. ;
+	. ; # Dados
+	. set $piece(mtempYYCFVPV600F7Clientes,z,1)=$piece($get(ftcl),Z,2)
+	. ;
+	. ;
+	. ; # Gravar na mtemp
+	. set ^mtempYYCFVPV600F7Clientes(codTerminal,codCliente)=mtempYYCFVPV600F7Clientes
+	;
+	quit $$$OK
+	;
+	;
+GerarF7ClientesSelecionados(codEmpresa,codTerminal,TABCLI)    ;
+	$$$VAR
+	new ftcl,sc,codCliente,codPedido,mtempYYCFVPV600F7CLISelecionados
+	set (ftcl,sc,codCliente,codPedido,mtempYYCFVPV600F7CLISelecionados) = ""
+	;
+	; # Matar mtemp
+	kill ^mtempYYCFVPV600F7Clientes(codTerminal)
+	;
+	if $data(TABCLI("0")) goto GERARTUDO ;Pegar todos os clientes
+	;
+	; # Leitura na global
+	for  set codCliente=$order(TABCLI(codCliente)) quit:codCliente=""  do
+	. ; # Obter descrição do cliente
+	. set sc=$$VerCliente^CCFTRG001(codEmpresa,codCliente,.ftcl)
+	. ; # Gravar dados
+	. ;
+	. ; # Dados
+	. set $piece(mtempYYCFVPV600F7CLISelecionados,z,1)=$piece($get(ftcl),Z,2)
+	. ;
+	. ;
+	. ; # Gravar na mtemp
+	. set ^mtempYYCFVPV600F7Clientes(codTerminal,codCliente)=mtempYYCFVPV600F7CLISelecionados
+	;
+	goto FIM
+	;
+GERARTUDO	do GerarF7Clientes(codEmpresa,codTerminal)
+FIM	quit $$$OK
+	;
+	;
+GerarF7Pedidos(codEmpresa,codTerminal,TABCLI)	
+	$$$VAR
+	new FTCL,sc,codCliente,codPedido,PVPD,mtempYYCFVPV600F7Pedidos,FTRE
+	set (FTCL,sc,codCliente,codPedido,PVPD,mtempYYCFVPV600F7Pedidos,FTRE) = ""
+	;
+	; # Matar mtemp
+	kill ^mtempYYCFVPV600F7Pedidos(codTerminal)
+	;
+	; # Leitura na global
+	for  set codCliente=$order(TABCLI(codCliente)) quit:codCliente=""  do
+	. for  set codPedido=$order(^YYPVPDOBS(codEmpresa,codCliente,codPedido)) quit:codPedido=""  do
+	. . ; # Obter descrição do cliente
+	. . set sc=$$VerPedido^CCPVRG001(codEmpresa,codPedido,,.PVPD)
+	. . set sc=$$VerCliente^CCFTRG001(codEmpresa,codCliente,.FTCL)
+	. . set sc=$$VerRepresentante^CCFTRG001(codEmpresa,$piece(PVPD,Z,2),.FTRE)
+	. . ; # Gravar dados
+	. . set mtempYYCFVPV600F7Pedidos=""
+	. . 	;
+	. .	; # Dados
+	. . set $piece(mtempYYCFVPV600F7Pedidos,z,1)=$piece($get(FTCL),Z,2)
+	. . set $piece(mtempYYCFVPV600F7Pedidos,z,2)=$piece($get(FTRE),Z,1)
+	. . ;
+	. . ;
+	. . ; # Gravar na mtemp
+	. . set ^mtempYYCFVPV600F7Pedidos(codTerminal,codPedido)=mtempYYCFVPV600F7Pedidos
+	;
+	quit $$$OK
+	;
+	;
+GerarF7PEDSelecionados(codEmpresa,codTerminal,TABPED)
+	$$$VAR
+	new FTCL,sc,codCliente,codPedido,PVPD,mtempYYCFVPV600F7PEDSelecionados,FTRE
+	set (FTCL,sc,codCliente,codPedido,PVPD,mtempYYCFVPV600F7PEDSelecionados,FTRE) = ""
+	;
+	; # Matar mtemp
+	kill ^mtempYYCFVPV600F7Pedidos(codTerminal)
+	;
+	; # Leitura na global
+	for  set codCliente=$order(TABPED(codCliente)) quit:codCliente=""  do
+	. for  set codPedido=$order(TABPED(codCliente,codPedido)) quit:codPedido=""  do
+	. . ; # Obter descrição do cliente
+	. . set sc=$$VerPedido^CCPVRG001(codEmpresa,codPedido,,.PVPD)
+	. . set sc=$$VerCliente^CCFTRG001(codEmpresa,codCliente,.FTCL)
+	. . set sc=$$VerRepresentante^CCFTRG001(codEmpresa,$piece(PVPD,Z,2),.FTRE)
+	. . ; # Gravar dados
+	. . set mtempYYCFVPV600F7PEDSelecionados=""
+	. . ;
+	. . ; # Dados
+	. . set $piece(mtempYYCFVPV600F7PEDSelecionados,z,1)=$piece($get(FTCL),Z,2)
+	. . set $piece(mtempYYCFVPV600F7PEDSelecionados,z,2)=$piece($get(FTRE),Z,1)
+	. . ;
+	. . ;
+	. . ; # Gravar na mtemp
+	. . set ^mtempYYCFVPV600F7Pedidos(codTerminal,codPedido)=mtempYYCFVPV600F7PEDSelecionados
+	;
+	quit $$$OK
+	;
+LimparSelecionados(CT,tabCli,tabPed)
+	$$$VAR
+	;
+	kill tabPed
+	kill tabCli
+	;
+	set tabPed = ""
+	set tabCli = ""
+	;
+	do ExcluirGlobalTrabalho^YYCFVPV600RG(CT)
+	;
+	quit $$$OK
+	;
+	;
+LimparGlobais(CT)
+	kill ^mtempYYCFVPV600F7Pedidos(CT)
+	kill ^mtempYYCFVPV600F7Clientes(CT)
+	;
+	; csw:csp:naogerar

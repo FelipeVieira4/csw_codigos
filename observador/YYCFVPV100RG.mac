@@ -1,0 +1,119 @@
+YYCFVPV100RG	; ?? 03/2024  - SEM TÍTULO - REGRAS
+	;
+	#include %CSUTICSP
+	;
+	;
+	;
+ObterInfoCliente(codEmp,codCli,yyCfvPv100)
+	$$$VAR
+	new tempYYCFVPV100
+	set tempYYCFVPV100=$get(^FTCL(codEmp,codCli))
+	set yyCfvPv100=tempYYCFVPV100
+	;
+	quit $$$OK
+	;
+ValidarCliente(codEmp,codCli)
+	$$$VAR
+	if $get(^FTCL(codEmp,codCli))="" quit 0	;Não Existe
+	if '$data(^PVCL(codEmp,codCli)) quit 0
+	quit $$$OK
+	;
+ValidarPedido(codEmp,codCli,codPed)
+	$$$VAR
+	if $get(^PVPD(codEmp,codPed))="" quit 0
+	if '$data(^PVCL(codEmp,codCli,codPed)) quit 0	;Como validar uma global nula
+	quit $$$OK
+	;
+BuscarObservacao(codEmp,codCli,codPed,observaocao)
+	if $get(^YYPVPDOBS(codEmp,codCli,codPed))'="" set observaocao = $get(^YYPVPDOBS(codEmp,codCli,codPed))
+	quit $$$OK
+	;
+GravarPedidoUnico(codEmp,codCli,codPed,observacao)
+	$$$VAR
+	set ^YYPVPDOBS(codEmp,codCli,codPed)=observacao
+	;
+	quit $$$OK
+	;
+GravarPedidos(codEmp,codCli,observacao)
+	$$$VAR
+	new codPed
+	set codPed=""
+	for  set codPed=$order(^PVPD(codEmp,codPed)) quit:codPed=""  do
+	. set ^YYPVPDOBS(codEmp,codCli,codPed)=observacao
+	; 
+	quit $$$OK
+	;
+GerarF7Cliente(codEmp,clientesCliente)
+	$$$VAR
+	new contPedido
+	set contPedido=""
+	;
+	kill clientesCliente
+	set clientesCliente=""
+	;
+	for  set contPedido=$order(^FTCL(codEmp,contPedido)) quit:contPedido=""  do
+	. if $data(^PVCL(codEmp,contPedido)) do
+	. . set clientesCliente(contPedido)=^FTCL(codEmp,contPedido)
+	quit $$$OK
+	;
+	;
+GerarF7ClienteConfig(codEmp,clientesConfigurados)
+	$$$VAR
+	new contCliente
+	set contCliente=""
+	;
+	kill clientesConfigurados
+	set clientesConfigurados=""
+	;
+	for  set contCliente=$order(^YYPVPDOBS(codEmp,contCliente)) quit:contCliente=""  do
+	. if $data(^FTCL(codEmp,contCliente)) do
+	. . set clientesConfigurados(contCliente)=$piece(^FTCL(codEmp,contCliente),Z,2)
+	quit $$$OK
+	;
+	;
+GerarF7Pedido(codEmp,pedidosConfigurados)
+	$$$VAR
+	new contPedido,contClie
+	set (contPedido,contClie)=""
+	for  set contClie=$order(^PVCL(codEmp,contClie)) quit:contClie=""  do
+	. for  set contPedido=$order(^PVCL(codEmp,contClie,contPedido)) quit:contPedido=""  do
+	. . set pedidosConfigurados(contPedido)=codEmp_"^"_$piece(^FTCL(codEmp,contClie),Z,2)_"^"_contPedido
+	quit $$$OK
+	;
+	;
+GerarGrid(CE,codTerminal,rotina,codGrid)	;
+	$$$VAR
+	new codigoCliente,codEmp,sc
+	;
+	; Global utilizada apenas para testar a manutenção, substituir "^GLOBALTESTE" pela global a ser utilizada
+	;kill ^GLOBALTESTE
+	;
+	;
+	. for  set codigoCliente=$order(^FTCL(codEmp,codigoCliente)) quit:codigoCliente=""  do
+	. .;
+	. .set sc=$$GerarGridLinha(codEmp,codTerminal,rotina,codGrid,codigoCliente)
+	;
+	quit $$$OK
+	;
+GerarGridLinha(codEmpresa,codTerminal,rotina,codGrid,codigoCliente,codRegistro)	;
+	$$$VAR
+	new NOME,dados,detalha,display,GLOBALTESTE,sc,DESCRICAO,PRECO
+	;
+	;set tempYYCFVGRID020=$get(^FTCL(codEmpresa,codigoCliente))
+	;
+	set $piece(dados,z,1)=codEmpresa
+	set $piece(dados,z,2)=codigoCliente
+	;
+	;
+	set $piece(display,z,1)=codEmpresa
+	set $piece(display,z,2)=codigoCliente
+	;
+	set $piece(detalha,z,1)=codEmpresa
+	set $piece(detalha,z,2)=codigoClientes
+	;
+	set sc=$$GravarLinhas^%CSW1GRID(codTerminal,rotina,codGrid,dados,display,detalha,$get(codRegistro))
+	;
+	quit $$$OK
+	;
+	;
+	; csw:csp:naogerar

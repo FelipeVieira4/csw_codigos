@@ -1,0 +1,225 @@
+YYCFVPV100(codCliDet,codPedDet)	; ?? 03/2024  - SEM TÍTULO
+	;
+	#include %CSUTICSP
+	;
+0000	;
+	do New^%CSW1UTI("%PRG,CT,sc,CE,codCli,codPed,%codret,YYCFVPV100,OBSERVACAO,CLIENTES,PEDIDOS")
+	new %PRG,CT,CE,sc,codCli,codPed,%codret,YYCFVPV100,OBSERVACAO,CLIENTES,PEDIDOS
+	;
+	set %PRG="YYCFVPV100",CT=%index
+	;
+	; csw:aj:72,40,
+	do AJ^%CSUTIUD(,,"Cadastro de observação")
+	;
+0500	set (sc,codCli,codPed,CE,YYCFVPV100,OBSERVACAO,CLIENTES,PEDIDOS)=""
+	set CE=1
+	do 9000
+	;
+	;
+	;
+	;
+	; Campo Código cliente
+1000	;
+1000ON	do ^%CSLE(1,10,8,"codCli",codCli,"@'?.N",,,",F7CLIENTES^YYCFVPV100,,cp1000")
+	quit:$$CSP^%CSW1UTI()
+1000EX	goto 0500:%=140,9999:%=27
+	;
+	if '$$Valcp1000() do ME^%CSUTIUD("Valor Cliente invalído") goto 1000
+	if '$$Valcp1110() do ME^%CSUTIUD("Cliente ou Empresa não existe") goto 1000
+	;
+	do 8000
+	;
+	; Campo Código Empresa ;Desativado agora vai se 1 por padrão
+1100	;
+1100ON	do ^%CSLE(2,10,8,"CE",CE,"@'?.N",,,",,,cp1100")
+	quit:$$CSP^%CSW1UTI()
+1100EX	goto 1000:%=140,9999:%=27
+	;
+	;
+	;
+	;
+	; Campo de Pedidos
+1200	;
+1200ON	do ^%CSLE(4,10,8,"codPed",codPed,"@'?.N",,,",F7PEDIDOS^YYCFVPV100,,cp1200")
+	quit:$$CSP^%CSW1UTI()
+1200EX	goto 1100:%=140,9999:%=27
+	;
+	if '$$Valcp1200() do ME^%CSUTIUD("Pedido não encontrado nesse cliente") goto 1200
+	;
+	if $get(codPed)'="" do 8100	;Se pegar um pedido especifico
+	do BuscarObservacao^YYCFVPV100RG(CE,codCli,codPed,.OBSERVACAO)
+	; Campo
+1300	;
+1300ON	do ^%CSW1UTITXTAREA(5,10,200,"OBSERVACAO",OBSERVACAO,,",cp1300",25,3,1)
+	quit:$$CSP^%CSW1UTI()
+1300EX	goto 1200EX:%=140,9999:%=27
+	;
+	if '$$Valcp1300() goto 1300
+	;
+	;
+2999	do Focus^%CSW1UTI(%PRG,"btSalvar")
+	;
+3000	if $get(codPed)="" do GravarPedidos^YYCFVPV100RG(CE,codCli,OBSERVACAO) quit
+	do GravarPedidoUnico^YYCFVPV100RG(CE,codCli,codPed,OBSERVACAO) quit
+	do MECABECALHO^%CSW1UTI(1)
+	;
+	;
+	;
+8000	; codCliDet,codPedDet
+	if $get(codCliDet)="" set sc=$$ObterInfoCliente^YYCFVPV100RG(CE,codCli,.YYCFVPV100)
+	else  do  set sc=$$ObterInfoCliente^YYCFVPV100RG(CE,codCliDet,.YYCFVPV100)
+	do Set^%CSW1UTI(%PRG,"ds1000",$piece(YYCFVPV100,"^",1))
+	do Set^%CSW1UTI(%PRG,"ds1100",$piece(YYCFVPV100,"^",2))
+	do Set^%CSW1UTI(%PRG,"ds1200",$piece(YYCFVPV100,"^",3))
+	do Set^%CSW1UTI(%PRG,"ds1300",$piece(YYCFVPV100,"^",4))
+	do Set^%CSW1UTI(%PRG,"ds1400",$piece(YYCFVPV100,"^",5))
+	quit
+	;
+8100	;
+	if $get(codPedDet)="" do Set^%CSW1UTI(%PRG,"ds1500",$piece(^PVPD(CE,codPed),"^",6),"d")
+	else  do Set^%CSW1UTI(%PRG,"ds1500",$piece(^PVPD(CE,codPedDet),"^",6),"d")	
+	quit
+	;
+	;
+8200	do BtnManter^%CSW1D(0)
+	do 8000
+	do 8100
+	do BuscarObservacao^YYCFVPV100RG(CE,codCliDet,codPedDet,.OBSERVACAO)
+	do ^%CSW1UTITXTAREA(5,10,200,"OBSERVACAO",OBSERVACAO,,",cp1300",25,3,1)
+	quit
+	;
+	; Tela
+	;
+9000	;
+	do Clear^%CSW1UTI()
+	if ($get(codCliDet)'="") && ($get(codPedDet)'="") do
+	. do 8200
+	. do BtnManter^%CSW1D(0)
+	. do Disable^%CSW1UTI()
+	else  do 
+	. do Enable^%CSW1UTI("cp1100")
+	. do BtnManter^%CSW1D(2)
+	;	
+	;
+	quit
+	;
+	;
+	; Fim
+	;
+9999	;
+	do FJ^%CSW1UTI
+	quit
+	;
+	; Método Validate
+	; Valcp1000() - Código Cliente
+	;
+Valcp1000()	;
+	if ($get(codCli)="")!(codCli?.N'=1) quit 0
+	quit $$$OK
+	;
+	; Valcp1100() - Código Empresa
+	;
+Valcp1100()	;
+	if ($get(CE)="")!(CE?.N'=1) quit 0
+	quit $$$OK
+	;
+	;
+	; Valcp1110()
+	;
+Valcp1110()	;
+	quit $$ValidarCliente^YYCFVPV100RG(CE,codCli)
+	;
+	; Valcp1200() - Código pedido
+	;
+Valcp1200()	;
+	if $get(codPed)="" quit $$$OK
+	if (codPed?.N'=1) quit 0
+	if ('$$ValidarPedido^YYCFVPV100RG(CE,codCli,codPed)) quit 0
+	quit $$$OK
+	;
+	;
+	;
+Valcp1300()
+	quit $$$OK
+	;
+	; 
+	;
+Validate()	;
+	if '$$Valcp1000() quit 0
+	if '$$Valcp1100() quit 0
+	if '$$Valcp1110() quit 0
+	if '$$Valcp1200() quit 0
+	quit $$$OK
+	;
+	;
+	;
+	; F7
+	;
+F7CLIENTES	;
+	do ^%CSUTIMB("Cadastrados;Configurados","%codret","Opções",,,,,,,,,"ESCOLHERF7^YYCFVPV100")
+    	quit:$$CSP^%CSW1UTI()
+	;
+ESCOLHERF7
+	if %=27 do SetF7^%CSW1UTI("") quit
+    	if %codret=1 do
+    	. do GerarF7Cliente^YYCFVPV100RG(CE,.CLIENTES)
+	. do ^%CSUTIPE("2,30","2","USUARIOS,NOME",10,"CLIENTES(@.",,,,,,"F7PE^YYCFVPV100")
+	else  do
+	. do GerarF7ClienteConfig^YYCFVPV100RG(CE,.CLIENTES)
+	. do ^%CSUTIPE("2,30","1","USUARIOS,NOME",10,"CLIENTES(@.",,,,,,"F7PE^YYCFVPV100")
+	quit:$$CSP^%CSW1UTI()
+	quit
+	;
+	;
+F7PEDIDOS	;
+	do ^%CSUTIMB("Cadastrados;Configurados","%codret","Opções",,,,,,,,,"ESCOLHERF7PED^YYCFVPV100")
+    	quit:$$CSP^%CSW1UTI()
+    	quit
+	;
+ESCOLHERF7PED
+	if %=27 do SetF7^%CSW1UTI("") quit
+    	if %codret=1 do
+    	. do GerarF7Pedido^YYCFVPV100RG(CE,.PEDIDOS)
+	. do ^%CSUTIPE("2,2,20,4","1,2,3","PEDIDOS,COD Empresa,Nome Cliente,PEDIDO",10,"PEDIDOS(@.",,,,,,"F7PE^YYCFVPV100")
+	else  do ^%CSUTIPE("2,30","1","PEDIDOS,OBSERVACAO",10,"^YYPVPDOBS(@.,@.,@.",,,,,,"F7PE^YYCFVPV100")
+	quit:$$CSP^%CSW1UTI()
+	quit
+	;
+F7PE    do SetF7^%CSW1UTI(%codret) quit
+	; Método Show
+	;
+	;
+Show(%cswP1,%cswP2,%cswP3,%cswP4)	;
+	do Show^%CSW1UTI("YYCFVPV100",$get(%cswP1),$get(%cswP2),$get(%cswP3),$get(%cswP4))
+	quit
+	;
+	;
+	; Montar Tela CSW
+	; csw:label:4,1,6,Código Cliente*
+	; csw:label:4,2,6,Código Empresa*
+	; csw:label:4,4,6,Código Pedido*
+	; csw:label:4,5,6,Observação*
+	; csw:btnManter:4,16,3000^YYCFVPV100,0500^YYCFVPV100
+	; 
+	; csw:label:4,9,10,Codigo do Representante:*
+	; csw:display:14,9,12,ds1000
+	; 
+	; csw:label:4,10,10,Nome do Cliente:*
+	; csw:display:14,10,12,ds1100
+	; 
+	; csw:label:4,11,10,Bairro:*
+	; csw:display:14,11,12,ds1200
+	; 
+	; csw:label:4,12,10,Caixa Postal:*
+	; csw:display:14,12,12,ds1300
+	; 
+	; csw:label:4,13,10,CEP:*
+	; csw:display:14,13,12,ds1400
+	; 
+	; 
+	; csw:label:4,14,10,Data previsão de faturamento*
+	; csw:display:14,14,12,ds1500
+	; 
+	; csw:labelcreate:YYCFVPV100
+	; csw:labeldestroy:9999
+	; csw:csp:gerar
