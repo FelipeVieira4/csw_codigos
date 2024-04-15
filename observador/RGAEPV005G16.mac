@@ -1,0 +1,47 @@
+RGAEPV005G16(CT,CE,CODCLI,CODPED)	; MÊS/ANO - TÍTULO
+	;
+	#include %CSUTICSP
+	;
+0000	do New^%CSW1UTI("%PRG","^RGAEPV005G16,sc,PVPD")
+	new %PRG,PVPD,sc
+	;
+	set %PRG="RGAEPV005G16"
+	;
+	set CT=$get(CT)
+	set CE=$get(CE)
+	set CODCLI=$get(CODCLI)
+	set CODPED=$get(CODPED)
+	;
+	set sc=$$VerPedido^CCPVRG001(CE,CODPED,,.PVPD)
+	if sc'=1 goto 9999
+	;
+	if $piece(PVPD,Z,1)'=CODCLI goto 9999
+	;
+1000	;
+1000ON	;
+	do Show^YYCFVPV100("1000EX^RGAEPV005G16","(CODCLI,CODPED,1)")
+	quit:$$CSP^%CSW1UTI()
+1000EX	;
+	;
+	; Fim
+	;
+9999	do Q^%CSW1UTI("^RGAEPV005G16")
+	;
+	quit
+	;
+Inf()	quit "1,1,4,GC"
+	;
+	; Método Validate()
+	;
+Validate()	;
+	quit $$$OK
+	;
+	; Método Show()
+	;
+	;
+Show(%cswP1,%cswP2)	;
+	do Ex^%CSW1UTI("RGAEPV005G16",$get(%cswP1),$get(%cswP2)) quit
+	;
+	; csw:labelcreate:RGAEPV005G16
+	; csw:labeldestroy:9999
+	; csw:csp:gerar
