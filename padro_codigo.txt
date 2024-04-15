@@ -1,1 +1,11 @@
+-> Padrão Códigos de Interface
 
+1. Definicao de váriaveis no CSW
+	. Váriaveis devem conter apenas 6 letras.
+	. Todas letras devem se maiúscula (exceção de váraveis do CSW como CT e %PRG)
+
+2. Padrão de Interface
+	. Campo de excluir deve ser sempre inicializada como opção "Não"
+	. Caso aplicação tenha um Grid e Botões customizados colocar esses botões em baixo da grid
+	. Botões devem estar sempre alinhando com os campos na tela
+	. Botões devem ter um campo de diferença entre o último campo
