@@ -2,8 +2,8 @@ YYCFVPV600	; MÊS/ANO - TÍTULO
 	;
 	#include %CSUTICSP
 	;
-0000	do New^%CSW1UTI("%PRG,CT,%codret,CODREG,LINHA,SN,TABGRID,sc,codCliente,contCliente,contPedido,ultCodCLIENTE,ultCodPEDIDO,FTCL,codPedido,TABCLI,TABPED,CODCLIDET,CODPEDDET,DETALHA,DATAPREFAT,CODCOL,CHECKD,NOVREPRE")
-	new %PRG,CT,%codret,CODREG,LINHA,SN,TABGRID,sc,codCliente,contCliente,contPedido,ultCodCLIENTE,ultCodPEDIDO,FTCL,codPedido,TABCLI,TABPED,CODCLIDET,CODPEDDET,DETALHA,DATAPREFAT,CODCOL,CHECKD,NOVREPRE
+0000	do New^%CSW1UTI("%PRG,CT,%codret,CODREG,LINHA,SN,TABGRID,sc,codCliente,contCliente,contPedido,ultCodCLIENTE,ultCodPEDIDO,FTCL,codPedido,TABCLI,TABPED,CODCLIDET,CODPEDDET,DETALHA,DATAPREFAT,CODCOL,CHECKD,NOVREPRE,PVPD")
+	new %PRG,CT,%codret,CODREG,LINHA,SN,TABGRID,sc,codCliente,contCliente,contPedido,ultCodCLIENTE,ultCodPEDIDO,FTCL,codPedido,TABCLI,TABPED,CODCLIDET,CODPEDDET,DETALHA,DATAPREFAT,CODCOL,CHECKD,NOVREPRE,PVPD
 	;
 	set %PRG="YYCFVPV600",CT=%index
 	;
@@ -124,6 +124,7 @@ YYCFVPV600	; MÊS/ANO - TÍTULO
 	quit:$$CSP^%CSW1UTI()
 	;
 2000	;
+	;
 	set sc=$$Limpar^%CSW1GRID(CT,%PRG,1)
 	;
 	do AG^%CSUTIUD(,"2000AG^YYCFVPV600")
@@ -141,6 +142,12 @@ YYCFVPV600	; MÊS/ANO - TÍTULO
 	;
 	goto FocusGrid
 	;
+3000	set sc=$$ImprimirRelatorio^YYCFVPV600RG(CE,CT,.TABCLI,.TABPED)
+	quit $$$OK
+	;
+3010	set sc=$$GerarArquivoCSV^YYCFVPV600RG(CE,CT)
+	quit $$$OK
+	;
 3050	set sc=$$ObterDadosLinha^%CSW1GRID(CT,%PRG,1,,.DETALHA,.LINHA,.CODREG)
 	set CODCLIDET=$piece(DETALHA,Z,2)
 	set CODPEDDET=$piece(DETALHA,Z,4)
@@ -155,6 +162,16 @@ YYCFVPV600	; MÊS/ANO - TÍTULO
 	;do ME^%CSUTICSP("COD treco alterado")
 	;
 	do 3050
+	;
+	if $data(^mtempYYCFVPV600CHECK(CT,CODPEDDET)) do
+	. do HabBotGeral^%CSW1("btManutencao",1)
+	. do HabBotGeral^%CSW1("btImprimirPdf",1)
+	. do HabBotGeral^%CSW1("btGerarCSV",1)
+	else  do
+	. do HabBotGeral^%CSW1("btManutencao",0)
+	. do HabBotGeral^%CSW1("btImprimirPdf",0)
+	. do HabBotGeral^%CSW1("btGerarCSV",0)
+	;
 	set sc=$$AtualizarLinhaGrid^YYCFVPV600RG(CE,CT,%PRG,CODCLIDET,CODPEDDET,1,CODREG)
 	set sc=$$AtualizarLinhaGrid^%CSW1GRID2(CT,%PRG,1,LINHA,CODREG)
 	;
@@ -167,20 +184,24 @@ YYCFVPV600	; MÊS/ANO - TÍTULO
 	;
 3200AG	set sc=$$MarcaDesmarcaTodos^%CSW1GRIDCHECK(CT,%PRG,CHECKD,1,1)
 	;
-	;set sc=$$GerarGlobalTrabalho^YYCFVPV600RG(CE,CT,.TABCLI,.TABPED)
-	set (codClie,codPedi)=""
-	;
-	;set sc=$$GravarGrid^YYCFVPV600RG(CE,CT,%PRG,1)
 	do FJAG^%CSW1UTI
-	;
 	if $$$ISERR(sc) do ME^%CSUTICSP(sc)
 	;
+	if $data(^mtempYYCFVPV600CHECK(CT)) do
+	. do HabBotGeral^%CSW1("btManutencao",1)
+	. do HabBotGeral^%CSW1("btImprimirPdf",1)
+	. do HabBotGeral^%CSW1("btGerarCSV",1)
+	else  do
+	. do HabBotGeral^%CSW1("btManutencao",0)
+	. do HabBotGeral^%CSW1("btImprimirPdf",0)
+	. do HabBotGeral^%CSW1("btGerarCSV",0)
 	;
 	goto 2000
 	;
 	;
 4000	;Manutenção
 	set sc=$$ModoManutencao^%CSW1GRID(CT,%PRG,1,1)
+	set DETALHA=""
 	do 3050
 	;
 	;Data Previsão Faturamento
@@ -194,15 +215,23 @@ YYCFVPV600	; MÊS/ANO - TÍTULO
 	quit:$$CSP^%CSW1UTI()
 	;
 4200EX	goto 4999:%=27,4999:%=140
-	if '$$Valcp4100() goto 4200
+	if '$$Valcp4200(NOVREPRE) goto 4200
 	;
-4999	set $piece(DETALHA,Z,2)=CODCLIDET
-	set $piece(DETALHA,Z,4)=CODPEDDET
+4999	;do ME^%CSUTICSP(CODCLIDET_"-"_CODPEDDET)
+	;
 	set $piece(DETALHA,Z,5)=DATAPREFAT
 	set $piece(DETALHA,Z,6)=NOVREPRE
-	;do ME^%CSUTICSP(CODCLIDET_"-"_CODPEDDET)
 	;
-	;set sc=$$CalcularPedido^CCPVRG008(CE,CT,%conta,%PRG,CODPEDDET)
+	set sc=$$VerPedido^CCPVRG001(CE,CODPEDDET,,.PVPD)
+	set $piece(PVPD,Z,6)=DATAPREFAT
+	set $piece(PVPD,Z,2)=NOVREPRE
+	set sc=$$CalcularPedido^CCPVRG008(CE,CT,%conta,%PRG,CODPEDDET)
+	do $$$SetG(^PVPD(CE,CODPEDDET),PVPD)
+	;
+	;
+	;
+	;
+	;set ^mtempYYCFVPV600(CT,CODCLIDET,CODPEDDET)=DETALHA
 	set sc=$$GravarGridGlobal^YYCFVPV600RG(CE,CT,%PRG,1,CODCLIDET,CODPEDDET,DETALHA)
 	set sc=$$AtualizarLinhaGrid^YYCFVPV600RG(CE,CT,%PRG,CODCLIDET,CODPEDDET,1,CODREG)
 	;
@@ -223,6 +252,9 @@ YYCFVPV600	; MÊS/ANO - TÍTULO
 	;
 9000	do Clear^%CSW1UTI()
 	do Enable^%CSW1UTI()
+	do HabBotGeral^%CSW1("btManutencao",0)
+	do HabBotGeral^%CSW1("btImprimirPdf",0)
+	do HabBotGeral^%CSW1("btGerarCSV",0)
 	;
 	set (codCliente,codPedido,TABCLI,TABPED,CODCLIDET,ultCodCLIENTE,ultCodPEDIDO,contCliente,contPedido,CODPEDDET,DETALHA,FTCL,CODCOL,NOVREPRE)=""
 	;
@@ -235,15 +267,15 @@ YYCFVPV600	; MÊS/ANO - TÍTULO
 	;
 	kill TABGRID(1)
 	;
-	set TABGRID(1)="; csw:gridConf:cod=1; LinPos=4; Altura=20; LinIni=4; LinFim=20; LabelEdit=TbCellClick^YYCFVPV600; HabilitaNavegacao=1;"
+	set TABGRID(1)="; csw:gridConf:cod=1; LinPos=4; Altura=16; LinIni=4; LinFim=20; LabelEdit=TbCellClick^YYCFVPV600; HabilitaNavegacao=1;"
 	set TABGRID(1,1)=";	csw:gridCols:cod=1;	Tipo=checkheader;Csw=01^^1;"
-	set TABGRID(1,2)="; csw:gridCols:cod=1; Tipo=n; Csw=15^Cliente^2;"
-	set TABGRID(1,3)="; csw:gridCols:cod=1; Tipo=a; Csw=15^Descrição Cliente^3;"
-	set TABGRID(1,4)="; csw:gridCols:cod=1; Tipo=n; Csw=10^Pedido^4;"
+	set TABGRID(1,2)="; csw:gridCols:cod=1; Tipo=n; Csw=2^Cliente^2;"
+	set TABGRID(1,3)="; csw:gridCols:cod=1; Tipo=a; Csw=27^Descrição Cliente^3;"
+	set TABGRID(1,4)="; csw:gridCols:cod=1; Tipo=n; Csw=6^Pedido^4;"
 	set TABGRID(1,5)="; csw:gridCols:cod=1; Tipo=d; Csw=10^Data de Previsão do Faturamento^5;"
-	set TABGRID(1,6)="; csw:gridCols:cod=1; Tipo=n; Csw=15^Representante^6;"
-	set TABGRID(1,7)="; csw:gridCols:cod=1; Tipo=a; Csw=25^Descrição do representante^7;"
-	set TABGRID(1,8)="; csw:gridCols:cod=1; Tipo=a; Csw=20^Situação^8;"
+	set TABGRID(1,6)="; csw:gridCols:cod=1; Tipo=n; Csw=7^Representante^6;"
+	set TABGRID(1,7)="; csw:gridCols:cod=1; Tipo=a; Csw=30^Descrição do representante^7;"
+	set TABGRID(1,8)="; csw:gridCols:cod=1; Tipo=a; Csw=15^Situação^8;"
 	;
 	;
 	set sc=$$Inicializar^%CSW1GRID(CT,%PRG,1,.TABGRID)
@@ -253,11 +285,10 @@ YYCFVPV600	; MÊS/ANO - TÍTULO
 	;
 	;
 9500	do 3050
-	if $get(CODCLIDET)="",$get(CODPEDDET)="" do 
-	. do ME^%CSUTICSP("Valores inválidos")
-	else  do
-	. do Show^YYCFVPV100("9500EX^YYCFVPV600","(CODCLIDET,CODPEDDET)")
-	. quit:$$CSP^%CSW1UTI()
+	if $get(CODCLIDET)'="",$get(CODPEDDET)="" do ME^%CSW1UTI("Valores inválidos") goto 9500EX
+	;
+	do Show^YYCFVPV100("9500EX^YYCFVPV600","(CODCLIDET,CODPEDDET,0)")
+	quit:$$CSP^%CSW1UTI()
 	;
 9500EX	goto FocusGrid
 	;
@@ -279,34 +310,42 @@ F7OBSERVACAO	;
 	quit:$$CSP^%CSW1UTI()
 	quit
 	;
-ESCOLHERF7
+ESCOLHERF7	;
 	if %=27 do SetF7^%CSW1UTI("") quit
-	if %codret=1 do
-	. do GerarF7Clientes^YYCFVPV600RG(CE,CT)
-	. do ^%CSUTIPE("2,30","1","Clientes,Nome Cliente",10,"^mtempYYCFVPV600F7Clientes(CT,@.",,,,,,"F7PE^YYCFVPV600")
-	. quit:$$CSP^%CSW1UTI()
-	else  do
-	. do GerarF7ClientesSelecionados^YYCFVPV600RG(CE,CT,.TABCLI)
-	. do ^%CSUTIPE("2,30","1","Clientes,Nome Cliente",10,"^mtempYYCFVPV600F7Clientes(CT,@.",,,,,,"F7PE^YYCFVPV600")
+	if %codret=2 goto F7CLIENTESELECIONADOS
+F7CLIENTE	;
+	do GerarF7Clientes^YYCFVPV600RG(CE,CT)
+	do ^%CSUTIPE("2,30","1","Clientes,Nome Cliente",10,"^mtempYYCFVPV600F7Clientes(CT,@.",,,,,,"F7PE^YYCFVPV600")
 	quit:$$CSP^%CSW1UTI()
-	quit
+	goto FIMF7CLI
+	;
+F7CLIENTESELECIONADOS	;
+	do GerarF7ClientesSelecionados^YYCFVPV600RG(CE,CT,.TABCLI)
+	do ^%CSUTIPE("2,30","1","Clientes,Nome Cliente",10,"^mtempYYCFVPV600F7Clientes(CT,@.",,,,,,"F7PE^YYCFVPV600")
+	quit:$$CSP^%CSW1UTI()
+	;
+FIMF7CLI	quit
 	;
 F7PEDIDOS	;
 	do ^%CSUTIMB("Todos;Selecionados","%codret","Opções",,,,,,,,,"ESCOLHERF7PED^YYCFVPV600")
 	quit:$$CSP^%CSW1UTI()
 	quit
 	;
-ESCOLHERF7PED
+ESCOLHERF7PED	;
 	if %=27 do SetF7^%CSW1UTI("") quit
-	if %codret=1 do
-	. do GerarF7Pedidos^YYCFVPV600RG(CE,CT,.TABCLI)
-	. do ^%CSUTIPE("2,25,25","1,2","PEDIDOS,Nome Cliente,Nome Representante",10,"^mtempYYCFVPV600F7Pedidos(CT,@.",,,,,,"F7PE^YYCFVPV600")
-	. quit:$$CSP^%CSW1UTI()
-	else  do
-	. do GerarF7PEDSelecionados^YYCFVPV600RG(CE,CT,.TABPED)
-	. do ^%CSUTIPE("2,25,25","1,2","PEDIDOS,Nome Cliente,Nome Representante",10,"^mtempYYCFVPV600F7Pedidos(CT,@.",,,,,,"F7PE^YYCFVPV600")
+	if %codret=2 goto F7PEDSEL
+	;
+	;
+F7PED	do GerarF7Pedidos^YYCFVPV600RG(CE,CT,.TABCLI)
+	do ^%CSUTIPE("2,25,25","1,2","PEDIDOS,Nome Cliente,Nome Representante",10,"^mtempYYCFVPV600F7Pedidos(CT,@.",,,,,,"F7PE^YYCFVPV600")
 	quit:$$CSP^%CSW1UTI()
-	quit
+	goto FIMF7PED
+	;
+F7PEDSEL	do GerarF7PEDSelecionados^YYCFVPV600RG(CE,CT,.TABPED)
+	do ^%CSUTIPE("2,25,25","1,2","PEDIDOS,Nome Cliente,Nome Representante",10,"^mtempYYCFVPV600F7Pedidos(CT,@.",,,,,,"F7PE^YYCFVPV600")
+	quit:$$CSP^%CSW1UTI()
+	;
+FIMF7PED	quit
 	;
 F7PE	do SetF7^%CSW1UTI(%codret) quit
 	;
@@ -315,28 +354,30 @@ F7PE	do SetF7^%CSW1UTI(%codret) quit
 	;
 Valcp1000()	;
 	$$$VAR
-	new sc
 	set sc = 1
 	if $get(codCliente)="" quit $$$OK
 	if ('$data(^PVCL(CE,codCliente)))!('$data(^YYPVPDOBS(CE,codCliente))) do
 	. set sc=0
-	. do ME^%CSUTICSP("Código cliente inválido")
+	. do ME^%CSW1UTI("Código cliente inválido")
 	quit sc
 	;
 	; Método Valcp1200() - Validar Código Pedido
 	;
 Valcp1100()	;
 	$$$VAR
-	new sc
 	set sc = 1
 	if $get(codPedido)="" quit $$$OK
 	set codCliente=$piece($get(^PVPD(CE,codPedido)),Z,1)
 	if ('$data(^PVCL(CE,codCliente,codPedido)))!('$data(^YYPVPDOBS(CE,codCliente,codPedido))) do
 	. set sc=0
-	. do ME^%CSUTICSP("Código cliente/pedido inválido")
+	. do ME^%CSW1UTI("Código cliente/pedido inválido!")
 	quit sc
 	;
 Valcp4100()	;
+	quit $$$OK
+	;
+Valcp4200(codREP)	;
+	if $get(^FTRE(CE,codREP))="" do ME^%CSW1UTI("Código Representante inválido!") quit 0
 	quit $$$OK
 	;
 Validate()	;
@@ -381,10 +422,12 @@ FocusGrid	do Focus^%CSW1GRID3(CT,%PRG,1,1) quit
 	; csw:display:20,1,16,ds1000
 	; csw:display:20,2,16,ds1100
 	;
-	; csw:botao:98,1,btConsultar,C<u>o</u>nsultar,o,2000^YYCFVPV600,consultar,Consultar,10
+	; csw:botao:98,1,btConsultar,<u>C</u>onsultar,c,2000^YYCFVPV600,consultar,Consultar,10
 	; csw:botao:98,2,btLimpar,<u>L</u>impar,l,0500^YYCFVPV600,apagar,Limpar,10
-	; csw:botao:2.2,23,btObservar,<u>O</u>bservação do Cliente,l,9500^YYCFVPV600,consultar,Observação do Cliente,10
-	; csw:botao:14.2,23,btManutencao,<u>M</u>anutenção,l,4000^YYCFVPV600,manutencao,Manutencao,10
+	; csw:botao:2.2,23,btObservar,<u>O</u>bservação do Cliente,o,9500^YYCFVPV600,consultar,Observação do Cliente,10
+	; csw:botao:14.2,23,btManutencao,<u>M</u>anutenção,m,4000^YYCFVPV600,editar,Manutenção,10
+	; csw:botao:24.4,23,btImprimirPdf,<u>I</u>mprimir PDF,i,3000^YYCFVPV600,pdf,Imprimir PDF,10
+	; csw:botao:34.6,23,btGerarCSV,<u>G</u>erar CSV,g,3010^YYCFVPV600,salvar,Gerar CSV,10
 	;
 	; csw:labelcreate:YYCFVPV600
 	; csw:labeldestroy:9999
