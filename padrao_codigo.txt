@@ -17,3 +17,4 @@
 	. Sempre útilizar do $$$SetG/$$$KillG na aplicação para criar/editar/excluir Globais
 	. Padrão de comentário do campo = "; #E oque a regra faz"
 	. Programas de cadastro simples útilizar valores das mtemp nós campos das empresas
+	. Útilizar $$$ISERR em retorno de váriaveis
