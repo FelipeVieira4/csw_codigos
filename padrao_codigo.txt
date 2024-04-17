@@ -12,7 +12,8 @@
 	. Ao apertar seta pra cima na primeira sair da aplicação
 	. Por padrão F7 sempre terem a opção todos/selecionados
 	. Labels de texto e os campos devem ter apenas um 1 de distância
-	. Padrão de comentário do campo = "; #E oque ele faz"
 
 3. Padrão de código
 	. Sempre útilizar do $$$SetG/$$$KillG na aplicação para criar/editar/excluir Globais
+	. Padrão de comentário do campo = "; #E oque a regra faz"
+	. Programas de cadastro simples útilizar valores das mtemp nós campos das empresas
