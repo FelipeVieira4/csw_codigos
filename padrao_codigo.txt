@@ -29,3 +29,5 @@
 	. Não é necessário fazer set em variaveis como nula caso não precise
 	. Regras do arquivo RG devem o conter as regras Ver/Gravar/Sugerir com oque o arquivo faz ex: "VerMedico","GravarChamada" etc...
 	. No validate dar "do Focus" no campo em que dar o erro
+	. Utilizar parâmetros do campo CSLE para desativar o campo depois de ser utilizado ex: "do 
+ ^%CSLE(LINHA,COLUNA,QTDACHAR,"VAR",VAR,"@'?.N",,,",F7^ROTINA,,cpLABEL,,,TAM,,,,1,1")"
