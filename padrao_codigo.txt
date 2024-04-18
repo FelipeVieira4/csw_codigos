@@ -32,3 +32,4 @@
 	. No validate dar "do Focus" no campo em que dar o erro
 	. Utilizar parâmetros do campo CSLE para desativar o campo depois de ser utilizado ex: "do 
  ^%CSLE(LINHA,COLUNA,QTDACHAR,"VAR",VAR,"@'?.N",,,",F7^ROTINA,,cpLABEL,,,TAM,,,,1,1")"
+	. Caso tela utilize uma global não seja apenas delas fazer new como NOMEGLOBAL"VALORPIECE" ex: -> GCAEMAD020 utiliza global ^GCAEMED(codEmpresa,4,codMedicamento) então global na tela é GCAEMED4
