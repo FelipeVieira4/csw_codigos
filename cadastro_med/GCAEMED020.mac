@@ -1,0 +1,132 @@
+GCAEMED020	; ?? 04/2024  - Cadastro de Medicamentos
+	;
+	#include %CSUTICSP
+	;
+0000	do New^%CSW1UTI("%PRG,%codret,CODMED,CT,GCAEMED4,SN,sc")
+	new %PRG,%codret,CODMED,CT,GCAEMED4,SN,sc
+	;
+	set %PRG="GCAEMED020"
+	set CT=%index
+	;
+	; csw:aj:108,28,
+	do AJ^%CSUTIUD(,,"Cadastro de Medicamentos")
+	;
+0500	do 9000
+	;
+	; Tela
+	;
+	set sc=$$SugerirCodigo^GCAEMED020RG(CE,.CODMED)
+	;
+	; # Código de Medicamento
+1000	;
+1000ON	do ^%CSLE(1,5,7,"CODMED",CODMED,"@'?.N",,,",F7MED^GCAEMED020,,cp1000,,,5,,,,1,1")
+	quit:$$CSP^%CSW1UTI()
+1000EX	goto 9999:%=140,9999:%=27
+	;
+	if '$$Valcp1000() goto 1000
+	;
+	set sc=$$VerMedicamento^GCAEMED020RG(CE,CODMED,.GCAEMED4)
+	if $$$ISERR(sc) goto 1100
+	;
+	do BtnManter^%CSW1D(2)
+	do 8000
+	do Focus^%CSW1UTI(%PRG,"btExcluir")
+	do Disable^%CSW1UTI()
+	;
+	quit
+	;
+	; # Nome de Medicamento
+	;
+1100	do BtnManter^%CSW1D(1)
+	;
+1100ON	do ^%CSLE(2,5,60,"$piece(GCAEMED4,Z,1)",$piece(GCAEMED4,Z,1),,"",,",,,cp1100,,,40,,,,1,1")
+	quit:$$CSP^%CSW1UTI()
+1100EX	goto 1000:%=140,9999:%=27
+	;
+	if '$$Valcp1100() goto 1100
+	;
+2999	do Focus^%CSW1UTI(%PRG,"btSalvar")
+	quit:$$CSP^%CSW1UTI()
+	;
+	; # Salvar
+	;
+3000	if '$$Validate() quit
+	;
+	set sc=$$GravarMedicamento^GCAEMED020RG(CE,CODMED,.GCAEMED4)
+	;
+	do MECABECALHO^%CSW1UTI(1)
+	goto 0500
+	;
+	; # Buscar Informações
+	;
+8000	set sc=$$VerMedicamento^GCAEMED020RG(CE,CODMED,.GCAEMED4)
+	do Set^%CSW1UTI(%PRG,"cp1100",$piece(GCAEMED4,Z,1))
+	quit
+	;
+	; # Limpar,Habilitar campos da tela
+	;
+9000	do Clear^%CSW1UTI()
+	do Disable^%CSW1UTI("cp1000")
+	;
+	do BtnManter^%CSW1D(0)
+	;
+	quit
+	;
+	; # Fechar a tela
+	;
+9999	do FJ^%CSW1UTI
+	quit
+	;
+	; # Validar código do medicamento
+Valcp1000()	;
+	if CODMED="" do ME^%CSUTIUD("Código: Campo obrigatório!") quit 0
+	if CODMED?.N'=1 do ME^%CSUTIUD("Código: Campo numérico!") quit 0
+	;
+	quit $$$OK
+	;
+	; # Validar nome do medicamento
+Valcp1100()	;
+	if $piece(GCAEMED4,Z,1)="" do ME^%CSUTIUD("Nome: Campo obrigatório!") quit 0
+	;
+	quit $$$OK
+	;
+	; Método Validate
+Validate()	;
+	if '$$Valcp1000() do Focus^%CSW1UTI(%PRG,"cp1000") quit 0
+	if '$$Valcp1100() do Focus^%CSW1UTI(%PRG,"cp1100") quit 0
+	;
+	quit $$$OK
+	;
+	; # F7 do medicamento
+	;
+F7MED	do ^%CSUTIPE("2,40","1","Medicamentos,Nome",10,"^GCAEMED(CE,4,@.",,,,,,"FIMF7^GCAEMED020")
+	quit:$$CSP^%CSW1UTI()
+	;
+FIMF7	do SetF7^%CSW1UTI(%codret) quit
+	;
+	; # Excluir
+	;
+Excluir	do SN^%CSUTIUD(,,,"Deseja remover a medicamento selecionada?","N","ExcluirSN^GCAEMED020")
+	quit:$$CSP^%CSW1UTI()
+	;
+ExcluirSN	if SN'="S" do 8000 goto 1100
+	;
+	set sc=$$ExcluirMedicamento^GCAEMED020RG(CE,CODMED)
+	do MECABECALHO^%CSW1UTI(2)
+	;
+	goto 0500
+	;
+	; Método Show
+	;
+Show(%cswP1,%cswP2,%cswP3,%cswP4)	;
+	do Show^%CSW1UTI("GCAEMED020",$get(%cswP1),$get(%cswP2),$get(%cswP3),$get(%cswP4))
+	quit
+	;
+	; Montar Tela CSW
+	; csw:label:1,1,1,Código*
+	; csw:label:1,2,1,Nome*
+	; csw:btnManter:5,4,3000^GCAEMED020,0500^GCAEMED020,Excluir^GCAEMED020
+	;
+	; csw:labelcreate:GCAEMED020
+	; csw:labeldestroy:9999
+	; csw:csp:gerar

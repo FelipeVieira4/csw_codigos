@@ -1,0 +1,45 @@
+GCAEMED020RG	; ?? 04/2024  - Regras da tela GCAEMED020 - REGRAS
+	;
+	#include %CSUTICSP
+	;
+	; Gerar novo código de medicamento
+	; 
+SugerirCodigo(codEmpresa,codMedicamento)	;
+	$$$VAR
+	;
+	set codMedicamento=""
+	set codMedicamento=$order(^GCAEMED(codEmpresa,4,""),-1)+1
+	;
+	quit $$$OK
+	;
+	; Buscar informações da global
+	;
+VerMedicamento(codEmpresa,codMedicamento,gcaemed4)	;
+	$$$VAR
+	;
+	set gcaemed4=""
+	set gcaemed4=$get(^GCAEMED(codEmpresa,4,codMedicamento))
+	;
+	if gcaemed4="" quit $$$ERROR(10000,"Medicamento não cadastrado!")
+	;
+	quit $$$OK
+	;
+	; Salvar medicamento na global
+	; 
+GravarMedicamento(codEmpresa,codMedicamento,gcaemed4)	;
+	$$$VAR
+	;
+	do $$$SetG(^GCAEMED(codEmpresa,4,codMedicamento),gcaemed4)
+	;
+	quit $$$OK
+	;
+	; Excluir
+	; 
+ExcluirMedicamento(codEmpresa,codMedicamento)	;
+	$$$VAR
+	;
+	do $$$KillG(^GCAEMED(codEmpresa,4,codMedicamento))
+	;
+	quit $$$OK
+	;
+	; csw:csp:naogerar
