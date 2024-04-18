@@ -17,4 +17,15 @@
 	. Sempre útilizar do $$$SetG/$$$KillG na aplicação para criar/editar/excluir Globais
 	. Padrão de comentário do campo = "; #E oque a regra faz"
 	. Programas de cadastro simples útilizar valores das mtemp nós campos das empresas
-	. Útilizar $$$ISERR em retorno de váriaveis
+	. Útilizar $$$ISERR em retorno de regras
+	. Comentários sempre no meio de três linhas
+	EX:
+		quit $$$OK -> Final de uma regre
+		;
+		; Buscar informações da global
+		;
+	VerMedicamento(codEmpresa,codMedicamento,gcaemed4 -> inicio de outra regra
+	
+	. Não é necessário fazer set em variaveis como nula caso não precise
+	. Regras do arquivo RG devem o conter as regras Ver/Gravar/Sugerir com oque o arquivo faz ex: "VerMedico","GravarChamada" etc...
+	. No validate dar "do Focus" no campo em que dar o erro
