@@ -1,0 +1,44 @@
+GCAEMED025RG	; ?? 04/2024  - Regras da tela GCAEMED025 - REGRAS
+	;
+	#include %CSUTICSP
+	;
+	; Gerar novo código da refeição
+	; 
+SugerirCodigo(codEmpresa,codRefeicao)	;
+	$$$VAR
+	;
+	set codRefeicao=""
+	set codRefeicao=$order(^GCAEMED(codEmpresa,5,""),-1)+1
+	;
+	quit $$$OK
+	;
+	; Buscar informações da global
+	;
+VerRefeicao(codEmpresa,codRefeicao,gcaemed5)	;
+	$$$VAR
+	;
+	set gcaemed5=""
+	set gcaemed5=$get(^GCAEMED(codEmpresa,5,codRefeicao))
+	;
+	if gcaemed5="" quit $$$ERROR(10000,"Refeição não cadastrado!")
+	;
+	quit $$$OK
+	;
+	; Salvar refeição na global
+	; 
+GravarRefeicao(codEmpresa,codRefeicao,gcaemed5)	;
+	$$$VAR
+	;
+	do $$$SetG(^GCAEMED(codEmpresa,5,codRefeicao),gcaemed5)
+	;
+	quit $$$OK
+	;
+	; Excluir
+ExcluirRefeicao(codEmpresa,codRefeicao)	;
+	$$$VAR
+	;
+	do $$$KillG(^GCAEMED(codEmpresa,5,codRefeicao))
+	;
+	quit $$$OK
+	;
+	; csw:csp:naogerar
