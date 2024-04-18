@@ -18,7 +18,9 @@ GCAEMED020	; ?? 04/2024  - Cadastro de Medicamentos
 	set sc=$$SugerirCodigo^GCAEMED020RG(CE,.CODMED)
 	;
 	; # Código de Medicamento
-1000	;
+	;
+1000	do BtnManter^%CSW1D(0)
+	;
 1000ON	do ^%CSLE(1,5,7,"CODMED",CODMED,"@'?.N",,,",F7MED^GCAEMED020,,cp1000,,,5,,,,1,1")
 	quit:$$CSP^%CSW1UTI()
 1000EX	goto 9999:%=140,9999:%=27
@@ -32,6 +34,7 @@ GCAEMED020	; ?? 04/2024  - Cadastro de Medicamentos
 	do 8000
 	do Focus^%CSW1UTI(%PRG,"btExcluir")
 	do Disable^%CSW1UTI()
+	goto 1100ON
 	;
 	quit
 	;
@@ -39,9 +42,9 @@ GCAEMED020	; ?? 04/2024  - Cadastro de Medicamentos
 	;
 1100	do BtnManter^%CSW1D(1)
 	;
-1100ON	do ^%CSLE(2,5,60,"$piece(GCAEMED4,Z,1)",$piece(GCAEMED4,Z,1),,"",,",,,cp1100,,,40,,,,1,1")
+1100ON	do ^%CSLE(2,5,60,"$piece(GCAEMED4,Z,1)",$piece(GCAEMED4,Z,1),,"",,",,,cp1100,,,40,,,,1")
 	quit:$$CSP^%CSW1UTI()
-1100EX	goto 1000:%=140,9999:%=27
+1100EX	goto 0500:%=140,9999:%=27
 	;
 	if '$$Valcp1100() goto 1100
 	;
@@ -85,12 +88,14 @@ Valcp1000()	;
 	quit $$$OK
 	;
 	; # Validar nome do medicamento
+	;
 Valcp1100()	;
 	if $piece(GCAEMED4,Z,1)="" do ME^%CSUTIUD("Nome: Campo obrigatório!") quit 0
 	;
 	quit $$$OK
 	;
 	; Método Validate
+	;
 Validate()	;
 	if '$$Valcp1000() do Focus^%CSW1UTI(%PRG,"cp1000") quit 0
 	if '$$Valcp1100() do Focus^%CSW1UTI(%PRG,"cp1100") quit 0
@@ -109,7 +114,7 @@ FIMF7	do SetF7^%CSW1UTI(%codret) quit
 Excluir	do SN^%CSUTIUD(,,,"Deseja remover a medicamento selecionada?","N","ExcluirSN^GCAEMED020")
 	quit:$$CSP^%CSW1UTI()
 	;
-ExcluirSN	if SN'="S" do 8000 goto 1100
+ExcluirSN	if SN'="S" do 8000 goto 1100ON
 	;
 	set sc=$$ExcluirMedicamento^GCAEMED020RG(CE,CODMED)
 	do MECABECALHO^%CSW1UTI(2)
@@ -123,8 +128,8 @@ Show(%cswP1,%cswP2,%cswP3,%cswP4)	;
 	quit
 	;
 	; Montar Tela CSW
-	; csw:label:1,1,1,Código*
-	; csw:label:1,2,1,Nome*
+	; csw:label:1,1,4,Código*
+	; csw:label:1,2,4,Nome*
 	; csw:btnManter:5,4,3000^GCAEMED020,0500^GCAEMED020,Excluir^GCAEMED020
 	;
 	; csw:labelcreate:GCAEMED020
