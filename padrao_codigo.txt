@@ -11,6 +11,7 @@
 	. Botões devem ter um campo de diferença entre o último campo
 	. Ao apertar seta pra cima na primeira sair da aplicação
 	. Por padrão F7 sempre terem a opção todos/selecionados
+	. Apertar ESQ sair do tela( tirando caso especificos)
 	. Labels de texto e os campos devem ter apenas um 1 de distância
 
 3. Padrão de código
