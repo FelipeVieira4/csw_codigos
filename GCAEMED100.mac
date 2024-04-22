@@ -1,0 +1,575 @@
+GCAEMED100	; ?? 04/2024  - SEM TÍTULO
+	;
+	#include %CSUTICSP
+	;
+0000	do New^%CSW1UTI("CODCPF,CODPAC,CONEDI,CPFEDT,GCAEMED1")
+	new CODCPF,CODPAC,CONEDI,CPFEDT,GCAEMED1
+	do New^%CSW1UTI("%PRG,%codret,CODFIC,GCAEMED8,IDAPAC,SEXPAC,TABALI,TABMED,TABPAT,TABREF")
+	new %PRG,%codret,CODFIC,GCAEMED8,IDAPAC,SEXPAC,TABALI,TABMED,TABPAT,TABREF
+	do New^%CSW1UTI("CODALI,CODMED,CODPAT,CODREF,CT,SN,TABALIREF,TABSIT,TELEDI,sc")
+	new CODALI,CODMED,CODPAT,CODREF,CT,SN,TABALIREF,TABSIT,TELEDI,sc
+	;
+	set %PRG="GCAEMED100"
+	set CT=%index
+	;
+	; csw:aj:108,28,
+	do AJ^%CSUTIUD(,,"Ficha de Registro do Paciente")
+	;
+	set sc=$$ObterTabSituacao^GCAEMED100RG(.TABSIT)
+	;
+0500	do 9000
+	;
+	set (CODCPF,CODFIC)=""
+	;
+	; # Pegar CPF do paciente
+	;
+1000	;
+1000ON	do ^%CSLE(1,5,11,"CODCPF",CODCPF,,"",,",F7PAC^GCAEMED100,,cp1000,,,8,,,,1")
+	quit:$$CSP^%CSW1UTI()
+1000EX	goto 9999:%=140,9999:%=27
+	;
+	if '$$Valcp1000() goto 1000
+	do 8000
+	;
+	; # Ficha do paciente
+	;
+1100	set sc=$$SugerirFicha^GCAEMED100RG(CE,CODCPF,.CODFIC)
+	;
+1100ON	do LimparCamposFicha
+	do Disable^%CSW1UTI("cp1100")
+	do ^%CSLE(10,5,8,"CODFIC",CODFIC,,"",,",F7FIC^GCAEMED100,,cp1100,,,,,,,1")
+	quit:$$CSP^%CSW1UTI()
+	;
+1100EX	goto 0500:%=140,9999:%=27
+	;
+	if '$$Valcp1100() goto 1100
+	;
+	set sc=$$VerFicha^GCAEMED100RG(CE,CT,CODCPF,CODFIC,.GCAEMED8)
+	;
+	if sc'=1 do  goto 1200
+	. do BtnManter^%CSW1D(1)
+	;
+	if CODFIC="" do  goto 1200
+	. set sc=$$SugerirFicha^GCAEMED100RG(CE,CODCPF,.CODFIC)
+	;
+	;
+	do BtnManter^%CSW1D(2)
+	do 8100
+	;
+	set sc=$$VerPatologia^GCAEMED100RG(CE,CT,CODCPF,CODFIC,.TABPAT)
+	set sc=$$VerMedicamento^GCAEMED100RG(CE,CT,CODCPF,CODFIC,.TABMED)
+	set sc=$$VerRefeicao^GCAEMED100RG(CE,CT,CODCPF,CODFIC,.TABREF)
+	set sc=$$VerAlimentacao^GCAEMED100RG(CE,CT,CODCPF,CODFIC,.TABREF,.TABALI)
+	;
+	do Enable^%CSW1UTI("cp1000,cp1100,cp2000")
+	do Focus^%CSW1UTI(%PRG,"btExcluir",,1)
+	quit:$$CSP^%CSW1UTI()
+	;
+	; # Data da consulta
+	;
+1200	set $piece(GCAEMED8,Z,1)=$$$horolog
+	;
+1200ON	do ^%CSLE(11,10,8,"$piece(GCAEMED8,Z,1)",$piece(GCAEMED8,Z,1),"@'?.N",",1,3,1",,",,,cp1200,,,,,,,1")
+	quit:$$CSP^%CSW1UTI()
+1200EX	goto 1100:%=140,9999:%=27
+	;
+	if '$$Valcp1200() goto 1200
+	;
+	; # Altura
+	; 
+1300	;
+1300ON	do ^%CSLE(12,10,3,"$piece(GCAEMED8,Z,2)",$piece(GCAEMED8,Z,2),"@'?.N","",,",,,cp1300,,,,,,,1")
+	quit:$$CSP^%CSW1UTI()
+1300EX	goto 1200:%=140,9999:%=27
+	;
+	if '$$Valcp1300() goto 1300
+	;
+	; # Peso
+	;
+1400	;
+1400ON	do ^%CSLE(13,10,3,"$piece(GCAEMED8,Z,3)",$piece(GCAEMED8,Z,3),"@'?.N","",,",,,cp1400,,,,,,,1")
+	quit:$$CSP^%CSW1UTI()
+1400EX	goto 1300:%=140,9999:%=27
+	;
+	if '$$Valcp1400() goto 1400
+	;
+	; # Atividade Física
+	;
+1500	;
+1500ON	do ^%CSLE(14,10,7,"$piece(GCAEMED8,Z,4)",$piece(GCAEMED8,Z,4),,,,",,,cp1500,,,,,,,1",,,,,1,.TABSIT)
+	quit:$$CSP^%CSW1UTI()
+	;
+1500EX	goto 9999:%=27,1400:%=140
+	if '$$Valcp1500() goto 1500
+	;
+	if $piece(GCAEMED8,Z,4)="0" do  goto 1700
+	. do DisableCp^%CSW1UTI("cp1600")	;Caso o campos esteja habilitado desabilitar
+	. do ClearCp^%CSW1UTI("cp1600")	;Limpar o campo
+	;
+	; # Descrição da atividades físicas
+	;
+1600	;
+1600ON	do ^%CSLE(14,20,60,"$piece(GCAEMED8,Z,5)",$piece(GCAEMED8,Z,5),,"",,",,,cp1600,,,30,,,,1")
+	quit:$$CSP^%CSW1UTI()
+1600EX	goto 1500:%=140,9999:%=27
+	;
+	if '$$Valcp1600() goto 1600
+	;
+	; # Patologia
+	;
+1700	do ClearCp^%CSW1UTI("ds1700")
+	;
+1700ON	do ^%CSLE(15,10,8,"CODPAT",,"@'?.N",,,",F7PAT^GCAEMED100,,cp1700,,,,,,,1")
+	quit:$$CSP^%CSW1UTI()
+	;
+1700EX	goto 9999:%=27,1600:(%=140)
+	if '$$Valcp1700() goto 1700
+	;
+	if CODPAT="" do  goto 1800
+	. if $data(TABPAT) do Set^%CSW1UTI(%PRG,"ds1700","Selecionados")
+	. else  do Set^%CSW1UTI(%PRG,"ds1700","Nenhum")
+	;
+	if '$data(TABPAT(CODPAT)) goto 1750
+	;
+	; 
+	;
+	do SN^%CSUTIUD(,,,"Código já selecionado! Deseja excluir?","N","1700SN^GCAEMED100")
+	quit:$$CSP^%CSW1UTI()
+	;
+1700SN	goto 1700:(%=27)!(SN="N")!(%=140)
+	;
+	kill TABPAT(CODPAT)
+	;
+	goto 1700
+	;
+	; - Incluir
+	;
+1750	do SN^%CSUTIUD(,,,,,"1750SN^GCAEMED100")
+	quit:$$CSP^%CSW1UTI()
+	;
+1750SN	goto 1700:(%=27)!(SN="N")!(%=140)
+	;
+	do Set^%CSW1UTI(%PRG,"ds1700",$get(^GCAEMED(CE,3,CODPAT)))
+	set TABPAT(CODPAT)=$get(^GCAEMED(CE,3,CODPAT))
+	;
+	goto 1700ON
+	;
+	; # Medicamento
+	;
+1800	do ClearCp^%CSW1UTI("ds1800")
+	;
+1800ON	do ^%CSLE(16,10,8,"CODMED",,,,,",F7MED^GCAEMED100,,cp1800,,,,,,,1")
+	quit:$$CSP^%CSW1UTI()
+	;
+1800EX	goto 9999:%=27,1700:(%=140)
+	if '$$Valcp1800() goto 1800
+	;
+	if CODMED="" do  goto 1900
+	. if $data(TABMED) do Set^%CSW1UTI(%PRG,"ds1800","Selecionados")
+	. else  do Set^%CSW1UTI(%PRG,"ds1800","Nenhum")
+	;
+	if '$data(TABMED(CODMED)) goto 1850
+	;
+	; 
+	;
+	do SN^%CSUTIUD(,,,"Código já selecionado! Deseja excluir?","N","1800SN^GCAEMED100")
+	quit:$$CSP^%CSW1UTI()
+	;
+1800SN	goto 1800:(%=27)!(SN="N")!(%=140)
+	;
+	kill TABMED(CODMED)
+	;
+	goto 1800
+	;
+	; - Incluir
+	;
+1850	do SN^%CSUTIUD(,,,,,"1850SN^GCAEMED100")
+	quit:$$CSP^%CSW1UTI()
+	;
+1850SN	goto 1800:(%=27)!(SN="N")!(%=140)
+	;
+	do Set^%CSW1UTI(%PRG,"ds1800",$get(^GCAEMED(CE,4,CODMED)))
+	set TABMED(CODMED)=$get(^GCAEMED(CE,4,CODMED))
+	;
+	goto 1800ON
+	;
+	; # Refeição
+	;
+1900	do ClearCp^%CSW1UTI("ds1900")
+	;do DisableCp^%CSW1UTI("cp2000")
+	;
+1900ON	do ^%CSLE(18,10,8,"CODREF",,,,,",F7REF^GCAEMED100,,cp1900,,,,,,,1")
+	quit:$$CSP^%CSW1UTI()
+	;
+1900EX	goto 9999:%=27,1800:(%=140)
+	if '$$Valcp1900() goto 1900
+	;
+	if CODREF="" do  goto 2000
+	. if $data(TABREF) do Set^%CSW1UTI(%PRG,"ds1900","Selecionados")
+	. else  do Set^%CSW1UTI(%PRG,"ds1900","Nenhum")
+	;
+	if '$data(TABREF(CODREF)) goto 1950
+	;
+	; 
+	;
+	do SN^%CSUTIUD(,,,"Código já selecionado! Deseja excluir?","N","1900SN^GCAEMED100")
+	quit:$$CSP^%CSW1UTI()
+	;
+1900SN	goto 1900:(%=27)!(SN="N")!(%=140)
+	;
+	kill TABREF(CODREF)
+	;
+	goto 1900
+	;
+	; - Incluir
+	;
+1950	do SN^%CSUTIUD(,,,,,"1950SN^GCAEMED100")
+	quit:$$CSP^%CSW1UTI()
+	;
+1950SN	goto 1900:(%=27)!(SN="N")!(%=140)
+	;
+	do Set^%CSW1UTI(%PRG,"ds1900",$get(^GCAEMED(CE,5,CODREF)))
+	set TABREF(CODREF)=$get(^GCAEMED(CE,5,CODREF))
+	;
+	goto 1900
+	;
+	; # Alimentação
+	;
+2000	do ClearCp^%CSW1UTI("ds2000")
+	;
+2000ON	do ^%CSLE(19,10,8,"CODALI",,,,,",F7ALI^GCAEMED100,,cp2000,,,,,,,1")
+	quit:$$CSP^%CSW1UTI()
+	;
+2000EX	goto 9999:%=27,1900:(%=140)
+	if '$$Valcp2000() goto 2000
+	;
+	if CODALI="" do  goto 2050INSN
+	. if $data(TABALI) do Set^%CSW1UTI(%PRG,"ds2000","Selecionados")
+	. else  do Set^%CSW1UTI(%PRG,"ds2000","Nenhum")
+	;
+	if '$data(TABALI(CODALI)) goto 2050
+	;
+	; 
+	;
+	do SN^%CSUTIUD(,,,"Código já selecionado! Deseja excluir?","N","2000SN^GCAEMED100")
+	quit:$$CSP^%CSW1UTI()
+	;
+2000SN	goto 2000:(%=27)!(SN="N")!(%=140)
+	;
+	kill TABALI(CODALI)
+	;
+	goto 2000
+	;
+	; - Incluir
+	;
+2050	do SN^%CSUTIUD(,,,,,"2050SN^GCAEMED100")
+	quit:$$CSP^%CSW1UTI()
+	;
+2050SN	goto 2000:(%=27)!(SN="N")!(%=140)
+	;
+	do Set^%CSW1UTI(%PRG,"ds1900",$get(^GCAEMED(CE,6,CODALI)))
+	set TABALI(CODALI)=$get(^GCAEMED(CE,6,CODALI))
+	;
+	goto 2000ON
+	;
+	;
+	;
+2050INSN	set (CODREF,CODALI,TABALIREF)=""
+	for  set CODREF=$order(TABREF(CODREF)) quit:CODREF=""  do
+	. for  set CODALI=$order(TABALI(CODALI)) quit:CODALI=""  do
+	. . set TABALIREF(CODREF,1,CODALI)=""
+	. . do ME^%CSUTICSP("COD:"_CODREF_" ALI:"_CODALI)
+	;
+	;
+	;
+2999	do Focus^%CSW1UTI(%PRG,"btSalvar",,1)
+	quit:$$CSP^%CSW1UTI()
+	;
+	; # Salvar ficha do cliente
+	;
+3000	if '$$Validate() quit
+	set sc=$$GravarFicha^GCAEMED100RG(CE,CODCPF,CODFIC,.GCAEMED8)
+	;
+	set sc=$$GravarPatologia^GCAEMED100RG(CE,CODCPF,CODFIC,.TABPAT)
+	set sc=$$GravarMedicamento^GCAEMED100RG(CE,CODCPF,CODFIC,.TABMED)
+	set sc=$$GravarRefeicaoAlimentacao^GCAEMED100RG(CE,CODCPF,CODFIC,.TABALIREF)
+	;
+	do MECABECALHO^%CSW1UTI(1)
+	goto 0500
+	;
+	; Tela
+	;
+8000	do Set^%CSW1UTI(%PRG,"ds1000",CODPAC)
+	do Set^%CSW1UTI(%PRG,"ds1100",$piece(GCAEMED1,Z,1))
+	;
+	; Idade do paciente
+	;
+	set IDAPAC=$fnumber(((+$$$horolog-$piece(GCAEMED1,Z,2))/365),"",0)
+	do Set^%CSW1UTI(%PRG,"ds1200",IDAPAC)
+	;
+	; Sexo do paciente
+	;
+	set sc=$$ObterSexoPaciente^GCAEMED100RG(GCAEMED1,.SEXPAC)
+	do Set^%CSW1UTI(%PRG,"ds1300",SEXPAC)
+	;
+	; Telefone do paciente
+	;
+	if $length($piece(GCAEMED1,Z,5))=10 do 
+	. set TELEDI="("_$extract($piece(GCAEMED1,Z,5),0,2)_") "_$extract($piece(GCAEMED1,Z,5),3,6)_" "_$extract($piece(GCAEMED1,Z,5),7,10)
+	else  set TELEDI="("_$extract($piece(GCAEMED1,Z,5),0,2)_") "_$extract($piece(GCAEMED1,Z,5),3,7)_" "_$extract($piece(GCAEMED1,Z,5),8,11)
+	do Set^%CSW1UTI(%PRG,"ds1400",TELEDI)
+	;
+	set sc=$$ObterConvenio^GCAEMED100RG(CE,$piece(GCAEMED1,Z,6),.CONEDI)
+	do Set^%CSW1UTI(%PRG,"ds1500",CONEDI)
+	;
+	quit
+	;
+	; # Carregar valores das telas 
+	;
+8100	do Set^%CSW1UTI(%PRG,"cp1200",$piece(GCAEMED8,Z,1),"d")
+	do Set^%CSW1UTI(%PRG,"cp1300",$piece(GCAEMED8,Z,2))
+	do Set^%CSW1UTI(%PRG,"cp1400",$piece(GCAEMED8,Z,3))
+	do Set^%CSW1UTI(%PRG,"cp1500",$piece(GCAEMED8,Z,4))
+	do Set^%CSW1UTI(%PRG,"cp1600",$piece(GCAEMED8,Z,5))
+	quit
+	;
+	; # Limpar os campos da ficha
+	;
+LimparCamposFicha	;
+	do ClearCp^%CSW1UTI("cp1200")
+	do ClearCp^%CSW1UTI("cp1300")
+	do ClearCp^%CSW1UTI("cp1400")
+	do ClearCp^%CSW1UTI("cp1500")
+	do ClearCp^%CSW1UTI("cp1600")
+	do ClearCp^%CSW1UTI("cp1700")
+	do ClearCp^%CSW1UTI("cp1800")
+	kill TABPAT
+	kill TABMED
+	kill TABREF
+	kill TABALI
+	;
+	quit $$$OK
+	;
+	;
+	;
+9000	do Clear^%CSW1UTI()
+	do Disable^%CSW1UTI("cp1000")
+	do BtnManter^%CSW1D(0)
+	;
+	do InicializaCombo^%CSW1A("cp1500",.TABSIT,0,,,,1)
+	;
+	quit
+	;
+	; Fim
+	;
+9999	do ExcluirGlobais^GCAEMED100RG(CE,CT)
+	do FJ^%CSW1UTI
+	quit
+	;
+	; # Valcp1000() - Validar CPF
+	;
+Valcp1000()	;
+	;
+	if CODCPF="" do ME^%CSUTIUD("CPF: Campos obrigatório!") quit 0
+	;
+	set sc=$$CG^%CSUTICSP(CODCPF,.CPFEDT)
+	if $$$ISERR(sc) do ME^%CSUTICSP(sc) quit 0
+	;
+	set sc=$$ObterCodigoPaciente^GCAEMED100RG(CE,CODCPF,.CODPAC)
+	if $$$ISERR(sc) do ME^%CSUTICSP(sc) quit 0
+	;
+	set sc=$$VerPaciente^GCAEMED100RG(CE,CODPAC,.GCAEMED1)
+	if $$$ISERR(sc) do ME^%CSUTICSP(sc) quit 0
+	;
+	quit $$$OK
+	;
+	; # Valcp1100() - Validar FICHA
+	;
+Valcp1100()	;
+	quit $$$OK
+	;
+	; # Valcp1200()
+	;
+Valcp1200()	;
+	if $piece(GCAEMED8,Z,1)="" do ME^%CSUTIUD("Data Consulta: Campos obrigatório!") quit 0
+	quit $$$OK
+	;
+	; Valcp1300()
+	;
+Valcp1300()	;
+	if $piece(GCAEMED8,Z,2)="" do ME^%CSUTIUD("Altura: Campos obrigatório!") quit 0
+	quit $$$OK
+	;
+	; Valcp1400()
+	;
+Valcp1400()	;	
+	if $piece(GCAEMED8,Z,3)="" do ME^%CSUTIUD("Peso: Campos obrigatório!") quit 0
+	quit $$$OK
+	;
+	; Valcp1500()
+	;
+Valcp1500()	;
+	if $piece(GCAEMED8,Z,3)="" do ME^%CSUTIUD("Atividade: Campos obrigatório!") quit 0
+	quit $$$OK
+	;
+	; Valcp1600()
+	;
+Valcp1600()	;
+	quit $$$OK
+	;
+	; Valcp1700()
+	;
+Valcp1700()	;
+	if CODPAT?.N'=1 do ME^%CSUTIUD("Patologia: Campos numérico!")
+	quit $$$OK
+	;
+	; Valcp1800()
+	;
+Valcp1800()	;
+	if CODPAT?.N'=1 do ME^%CSUTIUD("Patologia: Campos numérico!")
+	quit $$$OK
+	;
+	; Valcp1800()
+	;
+Valcp1900()	;
+	if CODREF?.N'=1 do ME^%CSUTIUD("Refeição: Campos numérico!")
+	quit $$$OK
+	;
+	; Valcp1800()
+	;
+Valcp2000()	;
+	if CODALI?.N'=1 do ME^%CSUTIUD("Alimentação: Campos numérico!")
+	quit $$$OK
+	;
+	; Método Validate
+	;
+Validate()	;
+	;
+	quit $$$OK
+	;
+	; F7 dos Pacientes
+	;
+F7PAC	set sc=$$GerarF7Pacientes^GCAEMED100RG(CE,CT)
+	do ^%CSUTIPE("15,30","1","Paciente Cadastrados,Nome",10,"^mTempF7Paciente(CE,CT,@.",,,,,,"F7PACPE^GCAEMED100")
+	quit:$$CSP^%CSW1UTI()
+	;
+F7PACPE	do SetF7^%CSW1UTI(%codret) quit
+	;
+	; F7 das Fichas
+	;
+F7FIC	do ^%CSUTIPE("15,30","1","Fichas Cadastrados,Nome",10,"^GCAEMED(CE,8,CODCPF,@.",,,,,,"F7FICPE^GCAEMED100")
+	quit:$$CSP^%CSW1UTI()
+	;
+F7FICPE	do SetF7^%CSW1UTI(%codret) quit
+	;
+	; F7 da Patologia
+	;
+F7PAT	do ^%CSUTIMB("Cadastrados;Selecionados","%codret","Opções",,,,,,,,,"F7PATMB^GCAEMED100")
+	quit:$$CSP^%CSW1UTI()
+	quit
+	;
+F7PATMB	if %=27 do SetF7^%CSW1UTI("") quit
+	if %codret=2 goto F7PATSEL
+	;
+	do ^%CSUTIPE("2,10","1","Patologia,Descrição",10,"^GCAEMED(CE,3,@1",,,,,,"F7PATPE^GCAEMED100")
+	quit:$$CSP^%CSW1UTI()
+	;
+F7PATSEL	do ^%CSUTIPE("2,10","1","Patologia,Descrição",10,"TABPAT(@1)",,,,,,"F7PATPE^GCAEMED100")
+	quit:$$CSP^%CSW1UTI()
+	;
+F7PATPE	;
+	do SetF7^%CSW1UTI(%codret) quit
+	;
+	; # F7 Medicamento
+	;
+F7MED	do ^%CSUTIMB("Cadastrados;Selecionados","%codret","Opções",,,,,,,,,"F7MEDMB^GCAEMED100")
+	quit:$$CSP^%CSW1UTI()
+	;
+F7MEDMB	if %=27 do SetF7^%CSW1UTI("") quit
+	if %codret=2 goto F7MEDSEL
+	;
+	do ^%CSUTIPE("2,10","1","Medicamento,Descrição",10,"^GCAEMED(CE,4,@1",,,,,,"F7MEDPE^GCAEMED100")
+	quit:$$CSP^%CSW1UTI()
+	;
+F7MEDSEL	do ^%CSUTIPE("2,10","1","Medicamento,Descrição",10,"TABMED(@1)",,,,,,"F7MEDPE^GCAEMED100")
+	quit:$$CSP^%CSW1UTI()
+	;
+F7MEDPE	;
+	do SetF7^%CSW1UTI(%codret) quit
+	;
+	; # F7 Refeição
+	;
+F7REF	do ^%CSUTIMB("Cadastrados;Selecionados","%codret","Opções",,,,,,,,,"F7REFMB^GCAEMED100")
+	quit:$$CSP^%CSW1UTI()
+	;
+F7REFMB	if %=27 do SetF7^%CSW1UTI("") quit
+	if %codret=2 goto F7REFSEL
+	;
+	do ^%CSUTIPE("2,10","1","Refeição,Descrição",10,"^GCAEMED(CE,5,@1",,,,,,"F7REFPE^GCAEMED100")
+	quit:$$CSP^%CSW1UTI()
+	;
+F7REFSEL	do ^%CSUTIPE("2,10","1","Refeição,Descrição",10,"TABREF(@1)",,,,,,"F7REFPE^GCAEMED100")
+	quit:$$CSP^%CSW1UTI()
+	;
+F7REFPE	do SetF7^%CSW1UTI(%codret) quit
+	;
+	; # F7 Alimentação
+	;
+F7ALI	do ^%CSUTIMB("Cadastrados;Selecionados","%codret","Opções",,,,,,,,,"F7ALIMB^GCAEMED100")
+	quit:$$CSP^%CSW1UTI()
+	;
+F7ALIMB	if %=27 do SetF7^%CSW1UTI("") quit
+	if %codret=2 goto F7ALISEL
+	;
+	do ^%CSUTIPE("2,10","1","Alimentação,Descrição",10,"^GCAEMED(CE,6,@1",,,,,,"F7ALIPE^GCAEMED100")
+	quit:$$CSP^%CSW1UTI()
+	;
+F7ALISEL	do ^%CSUTIPE("2,10","1","Alimentação,Descrição",10,"TABALI(@1)",,,,,,"F7ALIPE^GCAEMED100")
+	quit:$$CSP^%CSW1UTI()
+	;
+F7ALIPE	do SetF7^%CSW1UTI(%codret) quit
+	;
+	; Método Show
+	;
+Show(%cswP1,%cswP2,%cswP3,%cswP4)	;
+	do Show^%CSW1UTI("GCAEMED100",$get(%cswP1),$get(%cswP2),$get(%cswP3),$get(%cswP4))
+	quit
+	;
+	; Montar Tela CSW
+	; csw:label:1,1,4,CPF*
+	;
+	; csw:label:1,3,9,Código do Cliente*
+	; csw:display:10,3,7,ds1000
+	; csw:label:1,4,9,Nome do Paciente*
+	; csw:display:10,4,12,ds1100
+	; csw:label:1,5,9,Idade*
+	; csw:display:10,5,12,ds1200
+	; csw:label:1,6,9,Sexo*
+	; csw:display:10,6,9,ds1300
+	; csw:label:1,7,9,Telefone*
+	; csw:display:10,7,15,ds1400
+	; csw:label:1,8,9,Convênio*
+	; csw:display:10,8,12,ds1500
+	;
+	; csw:label:1,10,4,Ficha*
+	; csw:label:1,11,9,Data Consulta*
+	; csw:label:1,12,9,Altura*
+	; csw:label:1,13,9,Peso*
+	; csw:label:1,14,9,Atividade Física*
+	; csw:label:1,15,9,Patologia*
+	; csw:display:20,15,25,ds1700
+	; csw:label:1,16,9,Medicamento*
+	; csw:display:20,16,25,ds1800
+	; 
+	; csw:label:1,17,9,Resumo Alimentar,,1
+	; 
+	; csw:label:1,18,9,Refeição*
+	; csw:display:20,18,25,ds1900
+	; csw:label:1,19,9,Alimento*
+	; csw:display:20,19,25,ds2000
+	;
+	; csw:btnManter:9,21,3000^GCAEMED100,0500^GCAEMED100,Excluir^GCAEMED100
+	;
+	; csw:labelcreate:GCAEMED100
+	; csw:labeldestroy:9999
+	; csw:csp:gerar
