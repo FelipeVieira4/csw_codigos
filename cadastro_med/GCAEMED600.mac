@@ -1,0 +1,213 @@
+GCAEMED600	; MÊS/ANO - TÍTULO
+	;
+	#include %CSUTICSP
+	;
+0000	do New^%CSW1UTI("%codret,CODCOL,CODCPF,CODPAC,CODREG,CT,DETALHA,TABCPF,TABGRID")
+	new %codret,CODCOL,CODCPF,CODPAC,CODREG,CT,DETALHA,TABCPF,TABGRID
+	do New^%CSW1UTI("%PRG,LINHA,SN,sc")
+	new %PRG,LINHA,SN,sc
+	;
+	;
+	set %PRG="GCAEMED600",CT=%index
+	;
+	set sc=$$ValidarExecucaoCSW^%CSUTIRG001()
+	if $$$ISERR(sc) do ME^%CSUTICSP(sc) goto 9999
+	;
+	; csw:aj:108,28
+	do AJ^%CSUTIUD(,,"Consulta de Ficha de Registro do Paciente")
+	;
+	;
+	;
+0500	do 9000
+	;
+	; # Multiseleção de CPF
+	;
+1000	do ClearCp^%CSW1UTI("ds1000")
+	;
+1000ON	do ^%CSLE(1,5,11,"CODCPF",,,,,",F7CPF^GCAEMED600,,cp1000")
+	quit:$$CSP^%CSW1UTI()
+	;
+1000EX	goto 9999:%=27,9999:(%=140)
+	if '$$Valcp1000() goto 1000
+	;
+	if CODCPF="" do  goto 1999
+	. if '$data(TABCPF) do Set^%CSW1UTI(%PRG,"ds1000","Todos")
+	. else  do Set^%CSW1UTI(%PRG,"ds1000","Selecionados")
+	;
+	if '$data(TABCPF(CODCPF)) goto 1050
+	;
+	; - Excluir
+	;
+	do SN^%CSUTIUD(,,,"Código já selecionado! Deseja excluir?","N","1000SN^GCAEMED600")
+	quit:$$CSP^%CSW1UTI()
+	;
+1000SN	goto 1000:(%=27)!(SN="N")!(%=140)
+	;
+	kill TABCPF(CODCPF)
+	;
+	goto 1000
+	;
+	; - Incluir
+	;
+1050	set CODPAC=$get(^GCAEPAC(CE,CODCPF))
+	do Set^%CSW1UTI(%PRG,"ds1000",$piece($get(^GCAEMED(CE,1,CODPAC)),Z,1))
+	;
+	do SN^%CSUTIUD(,,,,,"1050SN^GCAEMED600")
+	quit:$$CSP^%CSW1UTI()
+	;
+1050SN	goto 1000ON:(%=27)!(SN="N")!(%=140)
+	;
+	set TABCPF(CODCPF)=""
+	;
+	goto 1000ON
+	;
+	; Confirma
+	;
+1999	do Focus^%CSW1UTI(%PRG,"btConsultar",,1)
+	quit:$$CSP^%CSW1UTI()
+	;
+2000	if '$$Validate() quit
+	;
+	set sc=$$Limpar^%CSW1GRID(CT,%PRG,1)
+	;
+	do AG^%CSUTIUD(,"2000AG^GCAEMED600")
+	quit:$$CSP^%CSW1UTI()
+	;
+2000AG	set sc=$$GerarGlobalTrabalho^GCAEMED600RG(CE,CT,.TABCPF)
+	set sc=$$GravarGrid^GCAEMED600RG(CE,CT,%PRG,.TABCPF,1)
+	;
+	do FJAG^%CSW1UTI
+	;
+	set sc=$$ValidarDisplay^%CSW1GRID(CT,%PRG,1)
+	if $$$ISERR(sc) do ME^%CSUTICSP(sc) goto 1000
+	;
+	set sc=$$Movimentar^%CSW1GRID(CT,%PRG,1,,1)
+	;
+	goto FocusGrid
+	;
+	; #Obter Dados Linha
+	;
+3050	set sc=$$ObterDadosLinha^%CSW1GRID(CT,%PRG,1,,.DETALHA,.LINHA,.CODREG)
+	quit
+	;
+	; #Abrir GCAEMED100 no modo visualização 
+	;
+3400 	do 3050
+	;
+	do Show^GCAEMED005("3400EX^GCAEMED600","($piece(DETALHA,z,3))")
+	quit:$$CSP^%CSW1UTI()
+	;
+3400EX	quit:$$CSP^%CSW1UTI()
+	;
+	; #Abrir Detalha da ficha
+	;
+3500 	do 3050
+	;
+	do Show^GCAEMED100("3400EX^GCAEMED600","(CODCPF,$piece(DETALHA,z,5))")
+	quit:$$CSP^%CSW1UTI()
+	;
+3500EX	quit:$$CSP^%CSW1UTI()
+	;
+	; Tela
+	;
+9000	do Clear^%CSW1UTI()
+	do Enable^%CSW1UTI()
+	;
+	;
+	kill TABCPF
+	;
+	; Grid
+	;
+	set sc=$$Limpar^%CSW1GRID(CT,%PRG,1)
+	;
+	kill TABGRID
+	;
+	set TABGRID(1)="; csw:gridConf:cod=1; LinPos=4; Altura=13; LinIni=4; LinFim=20; LbLinha=3050^GCAEMED600; LabelEdit=TbCellClick^GCAEMED600; HabilitaNavegacao=1;"
+	;
+	set TABGRID(1,1)="; csw:gridCols:cod=1; Tipo=n; Csw=4^CHECKBOX^1;"
+	set TABGRID(1,2)="; csw:gridCols:cod=1; Tipo=n; Csw=10^CPF^2;"
+	set TABGRID(1,3)="; csw:gridCols:cod=1; Tipo=n; Csw=7^Cód. Paciente^3^^^^^1;"
+	set TABGRID(1,4)="; csw:gridCols:cod=1; Tipo=a; Csw=50^Nome Paciente^4;"
+	set TABGRID(1,5)="; csw:gridCols:cod=1; Tipo=n; Csw=7^Cód. Ficha^5^^^^^1;"
+	;
+	set sc=$$AtuConfGrid^%CSW1GRID2(CT,%PRG,1,.TABGRID)
+	set sc=$$Inicializar^%CSW1GRID(CT,%PRG,1,.TABGRID)
+	;
+	quit
+	;
+	; Fim
+	;
+9999	set sc=$$ExcluirGlobalTrabalho^GCAEMED600RG(CT)
+	set sc=$$Finalizar^%CSW1GRID(CT,%PRG,1)
+	;
+	do FJ^%CSW1UTI
+	;
+	quit
+	;
+	; Método Valcp1000() - Código Exemplo
+	;
+Valcp1000()	;
+	if CODCPF="" quit $$$OK
+	;
+	set sc=$$CG^%CSUTICSP(CODCPF)
+	if $$$ISERR(sc) do ME^%CSUTICSP(sc) quit 0
+	;
+	set sc=$$ObterCodigoPaciente^GCAEMED100RG(CE,CODCPF)
+	if $$$ISERR(sc) do ME^%CSUTICSP(sc) quit 0
+	;
+	quit $$$OK
+	;
+Validate()	;
+	if '$$Valcp1000() do Focus^%CSW1UTI(%PRG,"cp1000") quit 0
+	;
+	quit $$$OK
+	;
+	; F7 de CPF
+	;
+F7CPF	do ^%CSUTIMB("Cadastrados;Selecionados","%codret","Opção",,,,,,,,2,"F7CPFMB^GCAEMED600")
+	quit:$$CSP^%CSW1UTI()
+	;
+F7CPFMB	if %=27 do SetF7^%CSW1UTI("") quit
+	if %codret=2 goto F7CPFSEL^GCAEMED600
+	;
+	set sc=$$GerarF7CPF^GCAEMED600RG(CE,CT,.TABCPF)
+	do ^%CSUTIPE("15,5,30","1,2","Clientes,Código,Nome",10,"^mtempF7CPF(CE,CT,@1)",,,,,,"F7CPFPE^GCAEMED600")
+	quit:$$CSP^%CSW1UTI()
+	;
+	; F7 Selecionados
+	;
+F7CPFSEL	set sc=$$GerarF7CPFSEL^GCAEMED600RG(CE,CT,.TABCPF)
+	do ^%CSUTIPE("15,5,30","1,2","Clientes,Código,Nome",10,"^mtempF7CPFSEL(CE,CT,@1)",,,,,,"F7CPFPE^GCAEMED600")
+	quit:$$CSP^%CSW1UTI()
+	;
+F7CPFPE	do SetF7^%CSW1UTI(%codret) quit
+	;
+	; Método Show()
+	;
+Show(%cswP1,%cswP2,%cswP3,%cswP4)	;
+	do Show^%CSW1UTI("GCAEMED600",$get(%cswP1),$get(%cswP2),$get(%cswP3),$get(%cswP4)) quit
+	;
+	; Método TbCellClick()
+	;
+TbCellClick(%cswLin,%cswCol)	;
+	;
+	set CODCOL=$piece(%cswCol,Y,1)
+	if CODCOL=3 goto 3400
+	if CODCOL=5 goto 3500
+	;
+	goto FocusGrid
+	;
+	; Método FocusGrid()
+	;
+FocusGrid	do Focus^%CSW1GRID3(CT,%PRG,1,1) quit
+	;
+	; csw:label:1,1,4,CPF
+	; 
+	; csw:display:19,1,20,ds1000
+	;
+	; csw:botao:98,1,btConsultar,C<u>o</u>nsultar,o,2000^GCAEMED600,consultar,consultar,10
+	; csw:botao:98,2,btLimpar,<u>L</u>impar,l,0500^GCAEMED600,apagar,Limpar,10
+	;
+	; csw:labelcreate:GCAEMED600
+	; csw:labeldestroy:9999
+	; csw:csp:gerar
