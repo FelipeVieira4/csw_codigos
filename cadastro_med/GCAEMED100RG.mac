@@ -1,0 +1,242 @@
+GCAEMED100RG	; ?? 04/2024  - SEM TÍTULO - REGRAS
+	;
+	#include %CSUTICSP
+	;
+	; Validar paciente na GCAEPAC
+	;
+ObterCodigoPaciente(codEmpresa,cpfPaciente,codPaciente)	;
+	$$$VAR
+	new gcAePac
+	;
+	set codPaciente=""
+	set gcAePac=$get(^GCAEPAC(codEmpresa,cpfPaciente))
+	;
+	if '$data(gcAePac) quit $$$ERROR(10000,"Paciente não encontrado!")
+	;
+	set codPaciente=$piece(gcAePac,z,1)
+	;
+	quit $$$OK
+	;
+	; Obter mensagem do convenio paciente
+	;
+ObterConvenio(codEmpresa,codConvenio,Convenio)	;
+	$$$VAR
+	new gcaemac2
+	;
+	set gcaemac2=$get(^GCAEMED(codEmpresa,2,codConvenio))
+	;
+	if gcaemac2="" set $piece(gcaemac2,z,1)="Indefinido"
+	set Convenio=codConvenio_"- "_$piece(gcaemac2,z,1)
+	;
+	quit $$$OK
+	;
+	; # Gerar mensagem do display do sexo do Paciente 
+	;
+ObterSexoPaciente(gcaemed1,sexoPaciente)	;
+	$$$VAR
+	;
+	set sexoPaciente="Indefinido"
+	;
+	if $piece(gcaemed1,Z,3)=1 set sexoPaciente="Masculino"
+	else  if $piece(gcaemed1,Z,3)=2 set sexoPaciente="Femenino"
+	;
+	quit $$$OK
+	;
+	; # ObterCombo
+	;
+ObterTabAtividade(tabAtividade)	;
+	$$$VAR
+	kill tabAtividade
+	;
+	set tabAtividade(1)="SIM"
+	set tabAtividade(2)="NÃO"
+	;
+	quit $$$OK
+	;
+	; Buscar informações do paciente
+	;
+VerPaciente(codEmpresa,codPaciente,gcaemed1)	;
+	$$$VAR
+	new idade
+	;
+	set (gcaemed1,idade)=""
+	set gcaemed1=$get(^GCAEMED(codEmpresa,1,codPaciente))
+	;
+	if gcaemed1="" quit $$$ERROR(10000,"Cadastro do paciente não encontrado!")
+	;
+	quit $$$OK
+	;
+	; # Buscar ficha do paciente
+	;
+VerFicha(codEmpresa,cpfPaciente,codFicha,gcaemed8)	;
+	$$$VAR
+	;
+	set (gcaemed8)=""
+	set gcaemed8=$get(^GCAEMED(codEmpresa,8,cpfPaciente,codFicha))
+	;
+	if gcaemed8="" quit $$$ERROR(10000,"Ficha do paciente não encontrado!")
+	;
+	quit $$$OK
+	;
+	; #Buscar patologia
+	;
+VerPatologia(codEmpresa,cpfPaciente,codFicha,tabPat)	;
+	$$$VAR
+	new codPatologia,gcaemed
+	;
+	kill tabPat
+	;
+	set (codPatologia)=""
+	for  set codPatologia=$order(^GCAEMED(codEmpresa,8,cpfPaciente,codFicha,1,codPatologia)) quit:codPatologia=""  do
+	. set gcaemed=$get(^GCAEMED(codEmpresa,3,codPatologia))
+	. set tabPat(codPatologia)=gcaemed
+	;
+	quit $$$OK
+	;
+	; # Buscar Medicamentos
+	;
+VerMedicamento(codEmpresa,cpfPaciente,codFicha,tabMed)	;
+	$$$VAR
+	new codMedicamento,gcaemed
+	;
+	kill tabMed
+	;
+	set codMedicamento=""
+	for  set codMedicamento=$order(^GCAEMED(codEmpresa,8,cpfPaciente,codFicha,2,codMedicamento)) quit:codMedicamento=""  do
+	. set gcaemed=$get(^GCAEMED(codEmpresa,4,codMedicamento))
+	. set tabMed(codMedicamento)=gcaemed
+	;
+	quit $$$OK
+	;
+	; # Buscar Refeicao
+	;
+VerRefeicao(codEmpresa,cpfPaciente,codFicha,tabRef)	;
+	$$$VAR
+	new codRefeicao,gcaemed5
+	;
+	kill tabRef
+	;
+	set codRefeicao=""
+	for  set codRefeicao=$order(^GCAEMED(codEmpresa,8,cpfPaciente,codFicha,3,codRefeicao)) quit:codRefeicao=""  do
+	. set gcaemed5=$get(^GCAEMED(codEmpresa,5,codRefeicao))
+	. set tabRef(codRefeicao)=gcaemed5
+	;
+	quit $$$OK
+	;
+	; # Buscar Refeicao
+	;
+VerAlimentacao(codEmpresa,cpfPaciente,codFicha,tabRef,tabAli)	;
+	$$$VAR
+	new codAlimentacao,codRefeicao,gcaemed6
+	;
+	kill tabAli
+	;
+	set (codAlimentacao,codRefeicao)=""
+	for  set codRefeicao=$order(^GCAEMED(codEmpresa,8,cpfPaciente,codFicha,3,codRefeicao)) quit:codRefeicao=""  do
+	. for  set codAlimentacao=$order(^GCAEMED(codEmpresa,8,cpfPaciente,codFicha,3,codRefeicao,1,codAlimentacao)) quit:codAlimentacao=""  do
+	. . set gcaemed6=$get(^GCAEMED(codEmpresa,6,codAlimentacao))
+	. . set tabAli(codAlimentacao)=gcaemed6
+	;
+	quit $$$OK
+	;
+	; Excluir Ficha
+	;
+ExcluirFicha(codEmpresa,cpfPaciente,codFicha)	;
+	$$$VAR
+	;
+	do $$$KillG(^GCAEMED(codEmpresa,8,cpfPaciente,codFicha))
+	;
+	quit $$$OK
+	;
+	; Excluir paciente
+	;
+ExcluirGlobais(codEmpresa,codTerminal)	;
+	$$$VAR
+	;
+	do $$$KillG(^mTempF7Paciente(codEmpresa,codTerminal))
+	do $$$KillG(^mTempF7Patologia(codEmpresa,codTerminal))
+	do $$$KillG(^mTempF7Medicamento(codEmpresa,codTerminal))
+	do $$$KillG(^mTempF7Ficha(codEmpresa,codTerminal))
+	;
+	quit $$$OK
+	;
+	; # Buscar ficha do paciente
+	;
+SugerirFicha(codEmpresa,cpfPaciente,codFicha)	;
+	$$$VAR
+	;
+	set codFicha=""
+	set codFicha=$order(^GCAEMED(codEmpresa,8,cpfPaciente,""),-1)
+	;
+	quit $$$OK
+	;
+	; # Salvar ficha do paciente
+	;
+GravarFicha(codEmpresa,cpfPaciente,codFicha,gcaemed8,tabPat,tabMed,tabAli,tabRef)	;
+	$$$VAR
+	new codPatologia,codMedicamento,codAliementacao,codRefeicao,tabAlimentacaoRefeicao
+	;
+	if $piece(gcaemed8,z,4)="0" set $piece(gcaemed8,z,5)=""
+	do $$$SetG(^GCAEMED(codEmpresa,8,cpfPaciente,codFicha),gcaemed8)
+	;
+	; # Gravar ponteiros da patologia
+	;
+	set codPatologia=""
+	for  set codPatologia=$order(tabPat(codPatologia)) quit:codPatologia=""  do
+	. do $$$SetG(^GCAEMED(codEmpresa,8,cpfPaciente,codFicha,1,codPatologia),"")
+	;
+	; # Gravar ponteiros do medicamento
+	;
+	do $$$KillG(^GCAEMED(codEmpresa,8,cpfPaciente,codFicha,2))
+	;
+	set codMedicamento=""
+	for  set codMedicamento=$order(tabMed(codMedicamento)) quit:codMedicamento=""  do
+	. do $$$SetG(^GCAEMED(codEmpresa,8,cpfPaciente,codFicha,2,codMedicamento),"")
+	;
+	; # Gravar refeição
+	;
+	set (codRefeicao,codAliementacao,tabAlimentacaoRefeicao)=""
+	for  set codRefeicao=$order(tabRef(codRefeicao)) quit:codRefeicao=""  do
+	. for  set codAliementacao=$order(tabAli(codAliementacao)) quit:codAliementacao=""  do
+	. . set tabAlimentacaoRefeicao(codRefeicao,1,codAliementacao)=""
+	;
+	do $$$KillG(^GCAEMED(codEmpresa,8,cpfPaciente,codFicha,3))
+	do $$$KillMergeG(^GCAEMED(codEmpresa,8,cpfPaciente,codFicha,3),tabAlimentacaoRefeicao)
+	;
+	quit $$$OK
+	;
+	; # Gerar F7 dos pacientes
+	;
+GerarF7Pacientes(codEmpresa,codTerminal)	;
+	$$$VAR
+	new cpfPaciente,codPaciente
+	;
+	do $$$KillG(^mTempF7Paciente(codEmpresa,codTerminal))
+	;
+	set (cpfPaciente,codPaciente)=""
+	for  set cpfPaciente=$order(^GCAEPAC(codEmpresa,cpfPaciente)) quit:cpfPaciente=""  do
+	. set codPaciente=$get(^GCAEPAC(codEmpresa,cpfPaciente))
+	. set ^mTempF7Paciente(codEmpresa,codTerminal,cpfPaciente)=$piece($get(^GCAEMED(codEmpresa,1,codPaciente)),z,1)
+	;
+	quit $$$OK
+	;
+	; # Gerar F7 da ficha
+	;
+GerarF7Fichas(codEmpresa,codTerminal,cpfPaciente)	;
+	$$$VAR
+	new codFicha,data
+	;
+	do $$$KillG(^mTempF7Ficha(codEmpresa,codTerminal))
+	;
+	set (codFicha)=""
+	for  set codFicha=$order(^GCAEMED(codEmpresa,8,cpfPaciente,codFicha)) quit:codFicha=""  do
+	. set ^mTempF7Ficha(codEmpresa,codTerminal,codFicha)=""
+	. set data=$piece($get(^GCAEMED(codEmpresa,8,cpfPaciente,codFicha)),z,1)
+	. set $piece(^mTempF7Ficha(codEmpresa,codTerminal,codFicha),z,1)=$zdate(data,4)
+	;
+	quit $$$OK
+	;
+	;
+	;
+	;
+	; csw:csp:naogerar
