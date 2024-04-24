@@ -1,0 +1,132 @@
+GCAEMED600RG	; ?? 04/2024  - SEM TÍTULO - REGRAS
+	;
+	#include %CSUTICSP
+	;
+	; Excluir Global Trabalho
+	;
+	; Excluir global de execução da grid
+ExcluirGlobalTrabalho(codTerminal)	;
+	$$$VAR
+	;
+	kill ^mtempGCAEMED(codTerminal)
+	;
+	quit $$$OK
+	;
+	; Gerar Global Trabalho
+	;
+GerarGlobalTrabalho(codEmpresa,codTerminal,tabCpf)	;
+	$$$VAR
+	new sc,codCPF,mtempGCAEMED,codFicha,codPaciente
+	;
+	; # Excluir mtemp
+	;
+	do $$$KillG(^mtempGCAEMED(codTerminal))
+	;
+	; # Leitura na global
+	;
+	set (codCPF,codFicha)=""
+	for  set codCPF=$order(^GCAEPAC(1,codCPF)) quit:codCPF=""  do
+	. ;
+	. if $data(tabCpf),'$data(tabCpf(codCPF)) quit
+	. ;
+	. set $piece(mtempGCAEMED,z,1)=codCPF
+	. set $piece(mtempGCAEMED,z,2)=$get(^GCAEPAC(codEmpresa,codCPF))	;Pegar código do paciente
+	. set codPaciente=$get(^GCAEPAC(codEmpresa,codCPF))
+	. set $piece(mtempGCAEMED,z,3)=$piece($get(^GCAEMED(codEmpresa,1,codPaciente)),z,1)	;Pegar Nome do Paciente
+	. ;
+	. for  set codFicha=$order(^GCAEMED(codEmpresa,8,codCPF,codFicha)) quit:codFicha=""  do
+	. . set $piece(mtempGCAEMED,z,4)=codFicha
+	. . set ^mtempGCAEMED(codTerminal,codCPF,codFicha)=mtempGCAEMED
+	;
+	;
+	quit $$$OK
+	;
+	; Gravar Grid
+	;
+GravarGrid(codEmpresa,codTerminal,rotina,tabCpf,codGrid,codRegistro)	;
+	$$$VAR
+	new codCPF,codFicha,sc
+	;
+	; # Obter codRegistro
+	set codRegistro=$get(codRegistro)
+	;
+	; # Leitura na mtemp
+	set (codCPF,codFicha)=""
+	for  set codCPF=$order(^mtempGCAEMED(codTerminal,codCPF)) quit:codCPF=""  do
+	. for  set codFicha=$order(^mtempGCAEMED(codTerminal,codCPF,codFicha)) quit:codFicha=""  do
+	. . ;
+	. . set sc=$$AtualizarLinhaGrid(codEmpresa,codTerminal,rotina,codCPF,codFicha,codGrid,codRegistro)
+	;
+	quit $$$OK
+	;
+	; Atualizar Linha Grid
+	;
+AtualizarLinhaGrid(codEmpresa,codTerminal,rotina,codCPF,codFicha,codGrid,codRegistro)	;
+	$$$VAR
+	new corFonte,corFundo,dados,detalha,display,mtempGCAEMED,negrito,sc
+	;detalha
+	; # Inicializar variáveis
+	set (dados,display,detalha,corFundo,corFonte,negrito)=""
+	;
+	; # Obter dados da mtemp
+	set mtempGCAEMED=$get(^mtempGCAEMED(codTerminal,codCPF,codFicha))
+	;
+	; # Dados
+	set $piece(dados,z,1)=1
+	set $piece(dados,z,2)=$piece(mtempGCAEMED,z,1)
+	set $piece(dados,z,3)=$piece(mtempGCAEMED,z,2)
+	set $piece(dados,z,4)=$piece(mtempGCAEMED,z,3)
+	set $piece(dados,z,5)=$piece(mtempGCAEMED,z,4)
+	;
+	; # Display
+	set display=dados
+	;
+	; # Detalha
+	set detalha=dados
+	;
+	set sc=$$GravarLinhas^%CSW1GRID(codTerminal,rotina,codGrid,dados,display,detalha,codRegistro,corFundo,corFonte,negrito)
+	;
+	quit $$$OK
+	;
+	; Gerar F7 de CPF
+	;
+GerarF7CPF(codEmpresa,codTerminal,tabCpf)	;
+	$$$VAR
+	new codCPF,codPaciente,gcaemed1,mtempF7CPF
+	;
+	kill ^mtempF7CPF(codEmpresa,codTerminal)
+	;
+	set (codCPF,mtempF7CPF)=""
+	for  set codCPF=$order(^GCAEPAC(1,codCPF)) quit:codCPF=""  do
+	. ;
+	. set codPaciente=$piece($get(^GCAEPAC(1,codCPF)),z,1)
+	. set gcaemed1=$get(^GCAEMED(codEmpresa,1,codPaciente))
+	. set $piece(mtempF7CPF,z,1)=codPaciente	;pegar código do paciente
+	. set $piece(mtempF7CPF,z,2)=$piece(gcaemed1,z,1) ;pegar nome
+	. set ^mtempF7CPF(codEmpresa,codTerminal,codCPF)=mtempF7CPF
+	;
+	quit $$$OK
+	;
+	; Gerar F7 de CPF Selecionados
+	;
+GerarF7CPFSEL(codEmpresa,codTerminal,tabCpf)	;
+		$$$VAR
+	new codCPF,codPaciente,gcaemed1,mtempF7CPF
+	;
+	kill ^mtempF7CPFSEL(codEmpresa,codTerminal)
+	;
+	set (codCPF,mtempF7CPF)=""
+	for  set codCPF=$order(^GCAEPAC(1,codCPF)) quit:codCPF=""  do
+	. ;
+	. if '$data(tabCpf(codCPF)) quit
+	. ;
+	. set codPaciente=$piece($get(^GCAEPAC(1,codCPF)),z,1)
+	. set gcaemed1=$get(^GCAEMED(codEmpresa,1,codPaciente))
+	. set $piece(mtempF7CPF,z,1)=codPaciente	;pegar código do paciente
+	. set $piece(mtempF7CPF,z,2)=$piece(gcaemed1,z,1) ;pegar nome
+	. set ^mtempF7CPFSEL(codEmpresa,codTerminal,codCPF)=mtempF7CPF
+	;
+	quit $$$OK
+	;
+	; csw:csp:naogerar
+	;
