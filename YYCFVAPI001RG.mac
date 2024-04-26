@@ -1,0 +1,237 @@
+YYCFVAPI001RG	; 04/2024  - REGRAS INTEGRACAO BRADESCO
+	;
+	#include %CSUTICSP
+	;
+	; Obter Integracao Treinamento API - Felipe
+	;
+ObterCodIntegracao()	;
+	quit "Custom-Felipe"
+	;
+	;
+ObterIntegracaoApiFelipe(codIntegracao,tabIntegracoes)    ;
+	$$$VAR
+	new sc,dadosIntegracao
+	;
+	kill tabIntegracoes
+	;
+	set codIntegracao=$$ObterCodIntegracao^YYCFVAPI001RG()
+	;
+	set dadosIntegracao=""
+	set $piece(dadosIntegracao,Z,1)="Integracao API Custom-Felipe-GPT"
+	set $piece(dadosIntegracao,Z,2)=0
+	;
+	set tabIntegracoes=dadosIntegracao
+	;
+	;
+	; # Integração dados gerais
+	set sc=$$ObterDadosGeraisIntegracao^YYCFVAPI001RG(.tabIntegracoes)
+	set sc=$$EndpointToken^YYCFVAPI001RG(.tabIntegracoes)
+	set sc=$$EndpointGPT^YYCFVAPI001RG(.tabIntegracoes)
+	; 
+	; # CEP, GPT e Portador
+	; 
+	quit $$$OK
+	;
+	; Obter Dados Gerais Integracao
+	;
+ObterDadosGeraisIntegracao(tabIntegracoes)    ;
+	$$$VAR
+	new sc,dadosIntegracao,tipoCampo
+	;
+	set tipoCampo="token"
+	;
+	set dadosIntegracao=""
+	set $piece(dadosIntegracao,Z,1)=1
+	set $piece(dadosIntegracao,Z,10)="token"
+	set $piece(dadosIntegracao,Z,11)="A"
+	set tabIntegracoes(2,tipoCampo)=dadosIntegracao
+	;
+	set tipoCampo="clientId"
+	;
+	set dadosIntegracao=""
+	set $piece(dadosIntegracao,Z,1)=1
+	set $piece(dadosIntegracao,Z,10)="clientId"
+	set $piece(dadosIntegracao,Z,11)="A"
+	set tabIntegracoes(2,tipoCampo)=dadosIntegracao
+	;
+	set tipoCampo="clientSecret"
+	;
+	set dadosIntegracao=""
+	set $piece(dadosIntegracao,Z,1)=1
+	set $piece(dadosIntegracao,Z,10)="clientSecret"
+	set $piece(dadosIntegracao,Z,11)="A"
+	set tabIntegracoes(2,tipoCampo)=dadosIntegracao
+	;
+	quit $$$OK
+	;
+EndpointToken(tabIntegracoes,metodo,endpoint,seqIntegacao)    ;
+	$$$VAR
+	new dadosIntegracao
+	;
+	set metodo="GET"
+	set endpoint="/auth"
+	set seqIntegacao=1
+	;
+	set dadosIntegracao=""
+	set $piece(dadosIntegracao,z,1)=1
+	set $piece(dadosIntegracao,z,2)="ObterToken"
+	set $piece(dadosIntegracao,z,3)="YYCFVAPI001RG"
+	set $piece(dadosIntegracao,z,4)="Obter Token"
+	set $piece(dadosIntegracao,z,5)=1
+	set tabIntegracoes(1,metodo,endpoint,seqIntegacao)=dadosIntegracao
+	;
+	quit $$$OK
+	;
+	;
+	;
+EndpointGPT(tabIntegracoes,metodo,endpoint,seqIntegacao)    ;
+	$$$VAR
+	new dadosIntegracao
+	;
+	set metodo="POST"
+	set endpoint="/GPT"
+	set seqIntegacao=1
+	;
+	set dadosIntegracao=""
+	set $piece(dadosIntegracao,z,1)=1
+	set $piece(dadosIntegracao,z,2)="ConsultaGPT"
+	set $piece(dadosIntegracao,z,3)="YYCFVAPI001RG"
+	set $piece(dadosIntegracao,z,4)="Consulta GPT"
+	set $piece(dadosIntegracao,z,5)=1
+	set tabIntegracoes(1,metodo,endpoint,seqIntegacao)=dadosIntegracao
+	;
+	set dadosIntegracao=""
+	set $piece(dadosIntegracao,z,1)="mensagem"
+	set $piece(dadosIntegracao,z,2)=1
+	set tabIntegracoes(1,metodo,endpoint,seqIntegacao,1)=dadosIntegracao
+	;
+	quit $$$OK
+	;
+	;
+ObterToken()    ;
+	$$$VAR
+	new codIntegracao,StatusLine,body,clientId,clientSecret,token
+	new dataLog,endpoint,horaLog,integraTerceiro,json,metodo,objRequest
+	new objResponse,objRetorno,sc,seqIntegracao,sequenciaLog,statusResponse,stream,tabParametro
+	;
+	set objRetorno=""
+	;
+	set codIntegracao=$$ObterCodIntegracao^YYCFVAPI001RG()
+	;
+	set sc=$$EndpointToken^YYCFVAPI001RG(,.metodo,.endpoint,.seqIntegracao)
+	;
+	set sc=$$ObterIntegracaoEndpoint^%CSINTEGRACAO010ATAB2RG(codIntegracao,metodo,endpoint,seqIntegracao,.integraTerceiro)
+	if ('integraTerceiro) quit $$$OK
+	;
+	set sc=$$GetHttpRequest^%CSINTEGRACAORG001(codIntegracao,.objRequest)
+	if $$$ISERR(sc) quit sc
+	;
+	do objRequest.SetHeader("Content-Type","application/json")
+	;
+	set sc=$$ObterIntegracaoCfgGerais^%CSINTEGRACAO010ATAB1RG(codIntegracao,"clientId",.clientId)
+    	set sc=$$ObterIntegracaoCfgGerais^%CSINTEGRACAO010ATAB1RG(codIntegracao,"clientSecret",.clientSecret)
+	;
+	set objBody={}
+	set objBody.clientId=clientId
+	set objBody.clientSecret=clientSecret
+	;
+	set body=objBody.%ToJSON()
+	;
+	do objRequest.EntityBody.Write(body)
+	;
+	do objRequest.Send(metodo,endpoint)
+	;
+	set sc=$$GerarLogIntegracaoApiRest^%CSINTEGRACAORG002(codIntegracao,metodo,endpoint,seqIntegracao,objRequest,body,.tabParametro,.dataLog,.horaLog,.sequenciaLog)
+	;
+	set objResponse=objRequest.HttpResponse
+	;
+	if ($get(objResponse)="")!('$isobject(objResponse)) quit $$$Error("Sem resposta do serviço!")
+	;
+	set statusResponse=objResponse.StatusCode
+	set StatusLine=objResponse.StatusLine
+	;
+	if ($extract(statusResponse)>2) do  quit sc
+	. set sc=$$$Error("Status Response:"_StatusLine_"!")    ;<ok>
+	;
+	set stream=objResponse.Data
+	do stream.MoveTo(0)
+	set json=stream.Read()
+	;
+	set sc=##class(%ZEN.Auxiliary.jsonProvider).%ConvertJSONToObject(json,,.objRetorno,1)
+	;
+	if objRetorno="" quit $$$OK
+	;
+	set token=objRetorno.token
+	;
+	do $$$SetG(^%CSINTEGRACAO(codIntegracao,2,1,"token"),"bearer "_token)
+	;
+	quit $$$OK
+	;
+	; set sc=$$ObterToken^YYCFVAPI001RG()
+	; set sc=$$ObterGPT^YYCFVAPI001RG("Conte até 10",.mtemp)
+	;
+ObterGPT(mensagem,mensagemRetorno)    ;
+	$$$VAR
+	new codIntegracao,StatusLine,body,clientId,clientSecret,token
+	new dataLog,endpoint,horaLog,integraTerceiro,json,metodo,objRequest
+	new objResponse,objRetorno,sc,seqIntegracao,sequenciaLog,statusResponse,stream,tabParametro
+	;
+	set objRetorno=""
+	;
+	set codIntegracao=$$ObterCodIntegracao^YYCFVAPI001RG()
+	;
+	set sc=$$EndpointGPT^YYCFVAPI001RG(,.metodo,.endpoint,.seqIntegracao)
+	;
+	set sc=$$ObterIntegracaoEndpoint^%CSINTEGRACAO010ATAB2RG(codIntegracao,metodo,endpoint,seqIntegracao,.integraTerceiro)
+	if ('integraTerceiro) quit $$$OK
+	;
+	set sc=$$GetHttpRequest^%CSINTEGRACAORG001(codIntegracao,.objRequest)
+	if $$$ISERR(sc) quit sc
+	;
+	set sc=$$ObterIntegracaoCfgGerais^%CSINTEGRACAO010ATAB1RG(codIntegracao,"token",.token)
+	;
+	do objRequest.SetHeader("Content-Type","application/json")
+	do objRequest.SetHeader("Authorization",token)
+	;
+	set objBody={}
+	set objBody.message=mensagem
+	;
+	set body=objBody.%ToJSON()
+	;
+	do objRequest.EntityBody.Write(body)
+	;
+	set tabParametro("mensagem")=mensagem
+	;
+	do objRequest.Send(metodo,endpoint)
+	;
+	set sc=$$GerarLogIntegracaoApiRest^%CSINTEGRACAORG002(codIntegracao,metodo,endpoint,seqIntegracao,objRequest,body,.tabParametro,.dataLog,.horaLog,.sequenciaLog)
+	;
+	set objResponse=objRequest.HttpResponse
+	;
+	if ($get(objResponse)="")!('$isobject(objResponse)) quit $$$Error("Sem resposta do serviço!")
+	;
+	set statusResponse=objResponse.StatusCode
+	set StatusLine=objResponse.StatusLine
+	;
+	if ($extract(statusResponse)>2) do  quit sc
+	. set sc=$$$Error("Status Response: "_StatusLine_"!")    ;<ok>
+	;
+	set stream=objResponse.Data
+	do stream.MoveTo(0)
+	set json=stream.Read()
+	;
+	set sc=##class(%ZEN.Auxiliary.jsonProvider).%ConvertJSONToObject(json,,.objRetorno,1)
+	;
+	if objRetorno="" quit $$$OK
+	;
+	set arraObjChoices=objRetorno.choices
+	set size=arraObjChoices.Size
+	;
+	for i=1:1:size do
+	. set objChoice=arraObjChoices.Oref(i)
+	. set mensagemRetorno=objChoice.message.content
+	. set tabRetorno(i)=mensagemRetorno
+	;
+	quit $$$OK
+	;
+	; csw:csp:naogerar
