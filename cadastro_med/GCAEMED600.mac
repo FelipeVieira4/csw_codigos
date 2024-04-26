@@ -94,7 +94,7 @@ GCAEMED600	; MÊS/ANO - TÍTULO
 	;
 3400 	do 3050
 	;
-	do Show^GCAEMED005("3400EX^GCAEMED600","($piece(DETALHA,z,3))")
+	do Show^GCAEMED005("3400EX^GCAEMED600","($piece(DETALHA,z,2))")
 	quit:$$CSP^%CSW1UTI()
 	;
 3400EX	quit:$$CSP^%CSW1UTI()
@@ -103,10 +103,43 @@ GCAEMED600	; MÊS/ANO - TÍTULO
 	;
 3500 	do 3050
 	;
-	do Show^GCAEMED100("3400EX^GCAEMED600","(CODCPF,$piece(DETALHA,z,5))")
+	do Show^GCAEMED100("3400EX^GCAEMED600","($piece(DETALHA,z,1),$piece(DETALHA,z,4))")
 	quit:$$CSP^%CSW1UTI()
 	;
 3500EX	quit:$$CSP^%CSW1UTI()
+	;
+	; # Ver as refeições	
+	;
+3600	set sc=$$ObterDadosLinha^%CSW1GRID(%index,%PRG,1,,.DETALHA)
+	;
+	do Show^GCAEMED610("3600EX^GCAEMED600","($piece(DETALHA,z,1),$piece(DETALHA,z,4))")
+	quit:$$CSP^%CSW1UTI()
+	;
+3600EX	quit:$$CSP^%CSW1UTI()
+	;
+	; # Ver as Patologias	
+	;
+3700	set sc=$$ObterDadosLinha^%CSW1GRID(%index,%PRG,1,,.DETALHA)
+	;
+	do Show^GCAEMED620("3800EX^GCAEMED600","($piece(DETALHA,z,1),$piece(DETALHA,z,4))")
+	quit:$$CSP^%CSW1UTI()
+	;
+3700EX	quit:$$CSP^%CSW1UTI()
+	;
+	; # Ver as refeições	
+	;
+3800	set sc=$$ObterDadosLinha^%CSW1GRID(%index,%PRG,1,,.DETALHA)
+	;
+	do Show^GCAEMED630("3800EX^GCAEMED600","($piece(DETALHA,z,1),$piece(DETALHA,z,4))")
+	quit:$$CSP^%CSW1UTI()
+	;
+3800EX	quit:$$CSP^%CSW1UTI()
+	;
+3900	set sc=$$ObterDadosLinha^%CSW1GRID(%index,%PRG,1,,.DETALHA)
+	;
+	set sc=$$ImprimirRelatorio^GCAEMED600RG(CE,CT,$piece(DETALHA,Z,1),$piece(DETALHA,Z,2),$piece(DETALHA,Z,4))
+	;
+3900EX	quit:$$CSP^%CSW1UTI()
 	;
 	; Tela
 	;
@@ -124,11 +157,10 @@ GCAEMED600	; MÊS/ANO - TÍTULO
 	;
 	set TABGRID(1)="; csw:gridConf:cod=1; LinPos=4; Altura=13; LinIni=4; LinFim=20; LbLinha=3050^GCAEMED600; LabelEdit=TbCellClick^GCAEMED600; HabilitaNavegacao=1;"
 	;
-	set TABGRID(1,1)="; csw:gridCols:cod=1; Tipo=n; Csw=4^CHECKBOX^1;"
-	set TABGRID(1,2)="; csw:gridCols:cod=1; Tipo=n; Csw=10^CPF^2;"
-	set TABGRID(1,3)="; csw:gridCols:cod=1; Tipo=n; Csw=7^Cód. Paciente^3^^^^^1;"
-	set TABGRID(1,4)="; csw:gridCols:cod=1; Tipo=a; Csw=50^Nome Paciente^4;"
-	set TABGRID(1,5)="; csw:gridCols:cod=1; Tipo=n; Csw=7^Cód. Ficha^5^^^^^1;"
+	set TABGRID(1,1)="; csw:gridCols:cod=1; Tipo=a; Csw=10^CPF^1;"
+	set TABGRID(1,2)="; csw:gridCols:cod=1; Tipo=n; Csw=7^Cód. Paciente^2^^^^^1;"
+	set TABGRID(1,3)="; csw:gridCols:cod=1; Tipo=a; Csw=50^Nome Paciente^3;"
+	set TABGRID(1,4)="; csw:gridCols:cod=1; Tipo=n; Csw=7^Cód. Ficha^4^^^^^1;"
 	;
 	set sc=$$AtuConfGrid^%CSW1GRID2(CT,%PRG,1,.TABGRID)
 	set sc=$$Inicializar^%CSW1GRID(CT,%PRG,1,.TABGRID)
@@ -192,8 +224,8 @@ Show(%cswP1,%cswP2,%cswP3,%cswP4)	;
 TbCellClick(%cswLin,%cswCol)	;
 	;
 	set CODCOL=$piece(%cswCol,Y,1)
-	if CODCOL=3 goto 3400
-	if CODCOL=5 goto 3500
+	if CODCOL=2 goto 3400
+	if CODCOL=4 goto 3500
 	;
 	goto FocusGrid
 	;
@@ -205,8 +237,13 @@ FocusGrid	do Focus^%CSW1GRID3(CT,%PRG,1,1) quit
 	; 
 	; csw:display:19,1,20,ds1000
 	;
-	; csw:botao:98,1,btConsultar,C<u>o</u>nsultar,o,2000^GCAEMED600,consultar,consultar,10
-	; csw:botao:98,2,btLimpar,<u>L</u>impar,l,0500^GCAEMED600,apagar,Limpar,10
+	; csw:botao:98,1,btConsultar,C<u>o</u>nsultar,o,2000^GCAEMED600,,consultar,10
+	; csw:botao:98,2,btLimpar,<u>L</u>impar,l,0500^GCAEMED600,apagar,consultar,10
+	; 
+	; csw:botao:5,20,btConsRefei,<u>R</u>efeição,r,3600^GCAEMED600,consultar,Refeições,10
+	; csw:botao:15,20,btConsPat,<u>P</u>atologia,p,3700^GCAEMED600,consultar,Patologias,10
+	; csw:botao:25,20,btConsMed,<u>M</u>edicamento,m,3800^GCAEMED600,consultar,Medicamentos,10
+	; csw:botao:35,20,btImprimir,<u>I</u>mpressão,i,3900^GCAEMED600,pdf,Imprimir,10
 	;
 	; csw:labelcreate:GCAEMED600
 	; csw:labeldestroy:9999

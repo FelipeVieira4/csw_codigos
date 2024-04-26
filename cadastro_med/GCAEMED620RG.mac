@@ -1,0 +1,78 @@
+GCAEMED620RG	; ?? 04/2024  - SEM TÍTULO - REGRAS
+	;
+	#include %CSUTICSP
+	;
+	; Excluir Global Trabalho
+	;
+ExcluirGlobalTrabalho(codEmpresa,codTerminal)	;
+	$$$VAR
+	;
+	kill ^mtempPatologia(codEmpresa,codTerminal)
+	;
+	quit $$$OK
+	;
+	; Gerar Global Trabalho
+	;
+GerarGlobalTrabalho(codEmpresa,codTerminal,cpfCliente,codFicha)	;
+	$$$VAR
+	new sc,codPatologia,mtempPatologia
+	;
+	;
+	; # Excluir mtemp
+	set sc=$$ExcluirGlobalTrabalho(codEmpresa,codTerminal)
+	;
+	set (codPatologia)=""
+	for  set codPatologia=$order(^GCAEMED(codEmpresa,8,cpfCliente,codFicha,1,codPatologia)) quit:codPatologia=""  do
+	. ; # Filtro
+	. ;
+	. ;do ME^%CSUTIUD(codPatologia)
+	. set $piece(mtempPatologia,z,1)=codPatologia
+	. set $piece(mtempPatologia,z,2)=$piece($get(^GCAEMED(codEmpresa,3,codPatologia)),z,1)
+	. ;
+	. ;
+	. set ^mtempPatologia(codEmpresa,codTerminal,codPatologia)=mtempPatologia
+	;
+	quit $$$OK
+	;
+	; Gravar Grid
+	;
+GravarGrid(codEmpresa,codTerminal,rotina,codGrid,codRegistro)	;
+	$$$VAR
+	new sc,codPatologia
+	;
+	; # Obter codRegistro
+	set codRegistro=$get(codRegistro)
+	;
+	; # Leitura na mtemp
+	set (codPatologia,codAlimento)=""
+	for  set codPatologia=$order(^mtempPatologia(codEmpresa,codTerminal,codPatologia)) quit:codPatologia=""  do
+	. set sc=$$AtualizarLinhaGrid(codEmpresa,codTerminal,rotina,codGrid,codPatologia,codRegistro)
+	;
+	quit $$$OK
+	;
+	; Atualizar Linha Grid
+	;
+AtualizarLinhaGrid(codEmpresa,codTerminal,rotina,codGrid,codPatologia,codRegistro)	;
+	$$$VAR
+	new corFonte,corFundo,dados,detalha,display,mtempPatologia,negrito,sc
+	;
+	; # Inicializar variáveis
+	set (dados,display,detalha,corFundo,corFonte,negrito)=""
+	;
+	; # Obter dados da mtemp
+	set mtempPatologia=$get(^mtempPatologia(codEmpresa,codTerminal,codPatologia))
+	;
+	; # Dados
+	set dados=mtempPatologia
+	;
+	; # Display
+	set display=dados
+	;
+	; # Detalha
+	set detalha=dados
+	;
+	set sc=$$GravarLinhas^%CSW1GRID(codTerminal,rotina,codGrid,dados,display,detalha,codRegistro,corFundo,corFonte,negrito)
+	;
+	quit $$$OK
+	;
+	; csw:csp:naogerar

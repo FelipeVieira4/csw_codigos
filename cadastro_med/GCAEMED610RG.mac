@@ -1,0 +1,84 @@
+GCAEMED610RG	; ?? 04/2024  - SEM TÍTULO - REGRAS
+	;
+	#include %CSUTICSP
+	;
+	; Excluir Global Trabalho
+	;
+ExcluirGlobalTrabalho(codEmpresa,codTerminal)	;
+	$$$VAR
+	;
+	kill ^mtempRefeicao(codEmpresa,codTerminal)
+	;
+	quit $$$OK
+	;
+	; Gerar Global Trabalho
+	;
+GerarGlobalTrabalho(codEmpresa,codTerminal,cpfCliente,codFicha)	;
+	$$$VAR
+	new sc,codRefeicao,codAlimento,mtempRefeicao
+	;
+	;
+	; # Excluir mtemp
+	set sc=$$ExcluirGlobalTrabalho(codEmpresa,codTerminal)
+	;
+	set (codRefeicao)=""	;^GCAEMED(1,8,40035583088,13,3,3,1,1)
+	for  set codRefeicao=$order(^GCAEMED(codEmpresa,8,cpfCliente,codFicha,3,codRefeicao)) quit:codRefeicao=""  do
+	. set codAlimento=""
+	. for  set codAlimento=$order(^GCAEMED(codEmpresa,8,cpfCliente,codFicha,3,codRefeicao,1,codAlimento)) quit:codAlimento=""  do
+	. . ;
+	. . ; # Filtro
+	. . ;
+	. . ;do ME^%CSUTIUD(codRefeicao)
+	. . set $piece(mtempRefeicao,z,1)=codRefeicao
+	. . set $piece(mtempRefeicao,z,2)=$piece($get(^GCAEMED(codEmpresa,5,codRefeicao)),z,1)
+	. . set $piece(mtempRefeicao,z,3)=$piece($get(^GCAEMED(codEmpresa,6,codAlimento)),z,1)
+	. . ;
+	. . ;
+	. . set ^mtempRefeicao(codEmpresa,codTerminal,codRefeicao,codAlimento)=mtempRefeicao
+	;
+	quit $$$OK
+	;
+	; Gravar Grid
+	;
+GravarGrid(codEmpresa,codTerminal,rotina,codGrid,codRegistro)	;
+	$$$VAR
+	new sc,codRefeicao,codAlimento
+	;
+	; # Obter codRegistro
+	set codRegistro=$get(codRegistro)
+	;
+	; # Leitura na mtemp
+	set (codRefeicao,codAlimento)=""
+	for  set codRefeicao=$order(^mtempRefeicao(codEmpresa,codTerminal,codRefeicao)) quit:codRefeicao=""  do
+	. for  set codAlimento=$order(^mtempRefeicao(codEmpresa,codTerminal,codRefeicao,codAlimento)) quit:codAlimento=""  do
+	. . ;
+	. . set sc=$$AtualizarLinhaGrid(codEmpresa,codTerminal,rotina,codGrid,codRefeicao,codAlimento,codRegistro)
+	;
+	quit $$$OK
+	;
+	; Atualizar Linha Grid
+	;
+AtualizarLinhaGrid(codEmpresa,codTerminal,rotina,codGrid,codRefeicao,codAlimento,codRegistro)	;
+	$$$VAR
+	new corFonte,corFundo,dados,detalha,display,mtempRefeicao,negrito,sc
+	;
+	; # Inicializar variáveis
+	set (dados,display,detalha,corFundo,corFonte,negrito)=""
+	;
+	; # Obter dados da mtemp
+	set mtempRefeicao=$get(^mtempRefeicao(codEmpresa,codTerminal,codRefeicao,codAlimento))
+	;
+	; # Dados
+	set dados=mtempRefeicao
+	;
+	; # Display
+	set display=dados
+	;
+	; # Detalha
+	set detalha=dados
+	;
+	set sc=$$GravarLinhas^%CSW1GRID(codTerminal,rotina,codGrid,dados,display,detalha,codRegistro,corFundo,corFonte,negrito)
+	;
+	quit $$$OK
+	;
+	; csw:csp:naogerar

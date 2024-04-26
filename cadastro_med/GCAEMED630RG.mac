@@ -1,0 +1,78 @@
+GCAEMED630RG	; ?? 04/2024  - SEM TÍTULO - REGRAS
+	;
+	#include %CSUTICSP
+	;
+	; Excluir Global Trabalho
+	;
+ExcluirGlobalTrabalho(codEmpresa,codTerminal)	;
+	$$$VAR
+	;
+	kill ^mtempMedicamento(codEmpresa,codTerminal)
+	;
+	quit $$$OK
+	;
+	; Gerar Global Trabalho
+	;
+GerarGlobalTrabalho(codEmpresa,codTerminal,cpfCliente,codFicha)	;
+	$$$VAR
+	new sc,codMedciamento,mtempMedicamento
+	;
+	;
+	; # Excluir mtemp
+	set sc=$$ExcluirGlobalTrabalho(codEmpresa,codTerminal)
+	;
+	set (codMedicamento)=""
+	for  set codMedicamento=$order(^GCAEMED(codEmpresa,8,cpfCliente,codFicha,2,codMedicamento)) quit:codMedicamento=""  do
+	. ; # Filtro
+	. ;
+	. ;do ME^%CSUTIUD(codMedicamento)
+	. set $piece(mtempMedicamento,z,1)=codMedicamento
+	. set $piece(mtempMedicamento,z,2)=$piece($get(^GCAEMED(codEmpresa,4,codMedicamento)),z,1)
+	. ;
+	. ;
+	. set ^mtempMedicamento(codEmpresa,codTerminal,codMedicamento)=mtempMedicamento
+	;
+	quit $$$OK
+	;
+	; Gravar Grid
+	;
+GravarGrid(codEmpresa,codTerminal,rotina,codGrid,codRegistro)	;
+	$$$VAR
+	new sc,codMedicamento
+	;
+	; # Obter codRegistro
+	set codRegistro=$get(codRegistro)
+	;
+	; # Leitura na mtemp
+	set (codMedicamento,codAlimento)=""
+	for  set codMedicamento=$order(^mtempMedicamento(codEmpresa,codTerminal,codMedicamento)) quit:codMedicamento=""  do
+	. set sc=$$AtualizarLinhaGrid(codEmpresa,codTerminal,rotina,codGrid,codMedicamento,codRegistro)
+	;
+	quit $$$OK
+	;
+	; Atualizar Linha Grid
+	;
+AtualizarLinhaGrid(codEmpresa,codTerminal,rotina,codGrid,codMedicamento,codRegistro)	;
+	$$$VAR
+	new corFonte,corFundo,dados,detalha,display,mtempMedicamento,negrito,sc
+	;
+	; # Inicializar variáveis
+	set (dados,display,detalha,corFundo,corFonte,negrito)=""
+	;
+	; # Obter dados da mtemp
+	set mtempMedicamento=$get(^mtempMedicamento(codEmpresa,codTerminal,codMedicamento))
+	;
+	; # Dados
+	set dados=mtempMedicamento
+	;
+	; # Display
+	set display=dados
+	;
+	; # Detalha
+	set detalha=dados
+	;
+	set sc=$$GravarLinhas^%CSW1GRID(codTerminal,rotina,codGrid,dados,display,detalha,codRegistro,corFundo,corFonte,negrito)
+	;
+	quit $$$OK
+	;
+	; csw:csp:naogerar

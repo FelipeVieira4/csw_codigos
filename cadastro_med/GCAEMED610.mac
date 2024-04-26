@@ -1,0 +1,103 @@
+GCAEMED610(cpfCliente,codFicha)	; MÊS/ANO - TÍTULO
+	;
+	#include %CSUTICSP
+	;
+0000	do New^%CSW1UTI("%PRG,CODDET,CODREG,CT,DETALHA,LINHA,TABGRID,sc")
+	new %PRG,CODDET,CODREG,CT,DETALHA,LINHA,TABGRID,sc
+	;
+	set %PRG="GCAEMED610",CT=%index
+	;
+	set sc=$$ValidarExecucaoCSW^%CSUTIRG001()
+	if $$$ISERR(sc) do ME^%CSUTICSP(sc) goto 9999
+	;
+	; csw:aj:108,28
+	do AJ^%CSUTIUD(,,"Mostrar as Refeições e Alimentos")
+	;
+0500	do 9000
+	;
+	if $data(^GCAEMED(CE,8,cpfCliente,codFicha,3)) do 2000
+	else  do ME^%CSUTIUD("Cliente: Não tem refeição!")
+	;
+1999	do Focus^%CSW1UTI(%PRG,"btConsultar",,1)
+	quit:$$CSP^%CSW1UTI()
+	;
+2000	;
+	set sc=$$Limpar^%CSW1GRID(CT,%PRG,1)
+	;
+	do AG^%CSUTIUD(,"2000AG^GCAEMED610")
+	quit:$$CSP^%CSW1UTI()
+	;
+2000AG	set sc=$$GerarGlobalTrabalho^GCAEMED610RG(CE,CT,cpfCliente,codFicha)
+	set sc=$$GravarGrid^GCAEMED610RG(CE,CT,%PRG,1)
+	;
+	do FJAG^%CSW1UTI
+	;
+	set sc=$$ValidarDisplay^%CSW1GRID(CT,%PRG,1)
+	if $$$ISERR(sc) do ME^%CSUTICSP(sc) goto 0500
+	;
+	set sc=$$Movimentar^%CSW1GRID(CT,%PRG,1,,1)
+	;
+	goto FocusGrid
+	;
+	; Obter Dados Linha
+	;
+3050	set sc=$$ObterDadosLinha^%CSW1GRID(CT,%PRG,1,,.DETALHA,.LINHA,.CODREG)
+	set CODDET=$piece(DETALHA,Z,1)
+	;
+	quit
+	;
+	; Tela
+	;
+9000	do Clear^%CSW1UTI()
+	do Enable^%CSW1UTI()
+	;
+	;
+	; Grid
+	;
+	set sc=$$Limpar^%CSW1GRID(CT,%PRG,1)
+	;
+	kill TABGRID(1)
+	;
+	set TABGRID(1)="; csw:gridConf:cod=1; LinPos=4; Altura=20; LinIni=4; LinFim=20; LbLinha=3050^GCAEMED610; LabelEdit=TbCellClick^GCAEMED610; HabilitaNavegacao=1;"
+	;
+	set TABGRID(1,1)="; csw:gridCols:cod=1; Tipo=n; Csw=5^Refeição^1;"
+	set TABGRID(1,2)="; csw:gridCols:cod=1; Tipo=a; Csw=30^Nome^2;"
+	set TABGRID(1,3)="; csw:gridCols:cod=1; Tipo=a; Csw=30^Alimento^3;"
+	;
+	set sc=$$AtuConfGrid^%CSW1GRID2(CT,%PRG,1,.TABGRID)
+	set sc=$$Inicializar^%CSW1GRID(CT,%PRG,1,.TABGRID)
+	;
+	quit
+	;
+	; Fim
+	;
+9999	set sc=$$ExcluirGlobalTrabalho^GCAEMED610RG(CE,CT)
+	set sc=$$Finalizar^%CSW1GRID(CT,%PRG,1)
+	;
+	do FJ^%CSW1UTI
+	;
+	quit
+	;
+	;
+	;
+Validate 	;
+	quit $$$OK
+	;
+	; Método Show()
+	;
+Show(%cswP1,%cswP2,%cswP3,%cswP4)	;
+	do Show^%CSW1UTI("GCAEMED610",$get(%cswP1),$get(%cswP2),$get(%cswP3),$get(%cswP4)) quit
+	;
+	; Método TbCellClick()
+	;
+TbCellClick(%cswLin,%cswCol)	;
+	;
+	goto FocusGrid
+	;
+	; Método FocusGrid()
+	;
+FocusGrid	do Focus^%CSW1GRID3(CT,%PRG,1,1) quit
+	;
+	; csw:labelcreate:GCAEMED610
+	; csw:labeldestroy:9999
+	; csw:csp:gerar
