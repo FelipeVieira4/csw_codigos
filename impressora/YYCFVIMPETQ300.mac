@@ -14,7 +14,7 @@ YYCFVIMPETQ300	; ?? 05/2024  - SEM TÍTULO
 0500	do 9000
 	set (NOME,YYCFVIMPETQ300)=""
 	;
-	; Campo Nome
+	; # Campo Nome do Usuário
 1000	;
 1000ON	do ^%CSLE(1,10,28,"NOME",NOME,"",,,",F7USU^YYCFVIMPETQ300,,cp1000,,,15,,,,1,1")
 	quit:$$CSP^%CSW1UTI()
@@ -22,7 +22,7 @@ YYCFVIMPETQ300	; ?? 05/2024  - SEM TÍTULO
 	;
 	if '$$Valcp1000() goto 1000
 	;
-	; Campo Código Etiqueta
+	; # Campo Código Etiqueta
 	;
 1100	set sc=$$SugerirEtiqueta^YYCFVIMPETQ300RG(CE,NOME,.CODETI)
 	;
@@ -42,6 +42,7 @@ YYCFVIMPETQ300	; ?? 05/2024  - SEM TÍTULO
 	if '$$Valcp1100() goto 1100
 	;
 	set sc=$$VerEtiqueta^YYCFVIMPETQ300RG(CE,NOME,CODETI,.YYCFVIMPETQ300)
+	;
 	if YYCFVIMPETQ300'="" do  quit:$$CSP^%CSW1UTI()
 	. do 8000
 	. do Enable^%CSW1UTI("cp1000")
@@ -49,7 +50,7 @@ YYCFVIMPETQ300	; ?? 05/2024  - SEM TÍTULO
 	. do Focus^%CSW1UTI(%PRG,"btExcluir",,1)
 	. do HabilitarDesabilitarBotoes(1)
 	;
-	; Campo
+	; # Campo - LINHA 1
 1200	;
 1200ON	do ^%CSLE(3,10,30,"$piece(YYCFVIMPETQ300,Z,1)",$piece(YYCFVIMPETQ300,Z,1),,"",,",,,cp1200,,,20,,,,1")
 	quit:$$CSP^%CSW1UTI()
@@ -57,7 +58,7 @@ YYCFVIMPETQ300	; ?? 05/2024  - SEM TÍTULO
 	;
 	if '$$Valcp1200() goto 1200
 	;
-	; Campo
+	; # Campo - LINHA 2
 1300	;
 1300ON	do ^%CSLE(4,10,30,"$piece(YYCFVIMPETQ300,Z,2)",$piece(YYCFVIMPETQ300,Z,2),,"",,",,,cp1300,,,20,,,,1")
 	quit:$$CSP^%CSW1UTI()
@@ -65,7 +66,7 @@ YYCFVIMPETQ300	; ?? 05/2024  - SEM TÍTULO
 	;
 	if '$$Valcp1300() goto 1300
 	;
-	; Campo
+	; # Campo - LINHA 3
 1400	;
 1400ON	do ^%CSLE(5,10,30,"$piece(YYCFVIMPETQ300,Z,3)",$piece(YYCFVIMPETQ300,Z,3),,"",,",,,cp1400,,,20,,,,1")
 	quit:$$CSP^%CSW1UTI()
@@ -79,21 +80,23 @@ YYCFVIMPETQ300	; ?? 05/2024  - SEM TÍTULO
 	do Focus^%CSW1UTI(%PRG,"btSalvar",,1)
 	quit:$$CSP^%CSW1UTI()
 	;
-	; Salvar
+	; # Salvar
 	;
 3000	if '$$Validate() quit 0
+	;
 	set sc=$$GravarUsuario^YYCFVIMPETQ300RG(CE,NOME)
 	set sc=$$GravarEtiquete^YYCFVIMPETQ300RG(CE,NOME,CODETI,.YYCFVIMPETQ300)
 	do MECABECALHO^%CSW1UTI(1)
-	quit $$$OK
+	goto 0500
 	;
-	; Mostrar as valores encontrados nessa etiqueta
+	; # Mostrar as valores encontrados nessa etiqueta
 	;
 8000	set sc=$$VerEtiqueta^YYCFVIMPETQ300RG(CE,NOME,CODETI,.YYCFVIMPETQ300)
 	do Set^%CSW1UTI(%PRG,"cp1200",$piece(YYCFVIMPETQ300,Z,1))
 	do Set^%CSW1UTI(%PRG,"cp1300",$piece(YYCFVIMPETQ300,Z,2))
 	do Set^%CSW1UTI(%PRG,"cp1400",$piece(YYCFVIMPETQ300,Z,3))
 	quit $$$OK
+	;
 	;
 	;
 9000	do Clear^%CSW1UTI()
@@ -103,11 +106,12 @@ YYCFVIMPETQ300	; ?? 05/2024  - SEM TÍTULO
 	;
 	quit
 	;
-	; Fim
+	; # Fim
+	;
 9999	do FJ^%CSW1UTI
 	quit
 	;
-	; Valcp1000()
+	; # Valcp1000()
 Valcp1000()	;
 	if NOME="" do ME^%CSUTIUD("NOME: Campo obrigatório!")  quit 0
 	quit $$$OK
@@ -118,35 +122,35 @@ Valcp1100()	;
 	if CODETI="" do ME^%CSUTIUD("ETIQUETA: Campo obrigatório!")  quit 0
 	quit $$$OK
 	;
-	; Valcp1200()
+	; # Valcp1200()
 Valcp1200()	;
 	if $piece(YYCFVIMPETQ300,Z,1)="" do ME^%CSUTIUD("LINHA 1: Campo obrigatório!")  quit 0
 	;
 	quit $$$OK
 	;
-	; Valcp1300()
+	; # Valcp1300()
 Valcp1300()	;
 	if $piece(YYCFVIMPETQ300,Z,2)="" do ME^%CSUTIUD("LINHA 2: Campo obrigatório!")  quit 0
 	;
 	quit $$$OK
 	;
-	; Valcp1400()
+	; # Valcp1400()
 Valcp1400()	;
 	if $piece(YYCFVIMPETQ300,Z,3)="" do ME^%CSUTIUD("LINHA 3: Campo obrigatório!")  quit 0
 	;
 	quit $$$OK
 	;
-	; Método Validate
+	; # Método Validate
 Validate()	;
-	if '$$Valcp1000() do Focus^%CSW1UTI(%PRG,"cp1000")
-	if '$$Valcp1100() do Focus^%CSW1UTI(%PRG,"cp1100")
-	if '$$Valcp1200() do Focus^%CSW1UTI(%PRG,"cp1200")
-	if '$$Valcp1300() do Focus^%CSW1UTI(%PRG,"cp1300")
-	if '$$Valcp1400() do Focus^%CSW1UTI(%PRG,"cp1400")
+	if '$$Valcp1000() do Focus^%CSW1UTI(%PRG,"cp1000") quit 0
+	if '$$Valcp1100() do Focus^%CSW1UTI(%PRG,"cp1100") quit 0
+	if '$$Valcp1200() do Focus^%CSW1UTI(%PRG,"cp1200") quit 0
+	if '$$Valcp1300() do Focus^%CSW1UTI(%PRG,"cp1300") quit 0
+	if '$$Valcp1400() do Focus^%CSW1UTI(%PRG,"cp1400") quit 0
 	;
 	quit $$$OK
 	;
-	; F7 Etiqueta
+	; # F7 Etiqueta
 	;
 F7ETI	do ^%CSUTIPE("3,30,30,30","1,2,3","Etiquetas cadastradas,Linha 1,Linha 2,Linha 3",10,"^YYCFVIMPETQ(CE,NOME,@1)",,,,,,"F7ETIPE^YYCFVIMPETQ300")
 	quit:$$CSP^%CSW1UTI()
@@ -154,7 +158,7 @@ F7ETI	do ^%CSUTIPE("3,30,30,30","1,2,3","Etiquetas cadastradas,Linha 1,Linha 2,L
 	;
 F7ETIPE	do SetF7^%CSW1UTI(%codret) quit
 	;
-	; F7 do usuário
+	; # F7 do usuário
 	;
 F7USU	do ^%CSUTIPE("10","","Usuários",10,"^YYCFVUSUARIOPONTEIRO(CE,@1)",,,,,,"F7USUPE^YYCFVIMPETQ300")
 	quit:$$CSP^%CSW1UTI()
@@ -162,7 +166,7 @@ F7USU	do ^%CSUTIPE("10","","Usuários",10,"^YYCFVUSUARIOPONTEIRO(CE,@1)",,,,,,"F
 	;
 F7USUPE	do SetF7^%CSW1UTI(%codret) quit
 	;
-	; Excluir a etiqueta selecionada
+	; # Excluir a etiqueta selecionada
 	;
 Excluir	do SN^%CSUTIUD(,,,"Deseja remover a Etiqueta selecionada?","N","ExcluirSN^YYCFVIMPETQ300")
 	quit:$$CSP^%CSW1UTI()
@@ -175,10 +179,10 @@ ExcluirSN	if SN'="S" goto 1200
 	;
 	goto 0500
 	;
-	; Desligar
+	; # Desligar
 	;
 HabilitarDesabilitarBotoes(estado)	;
-	if estado'=0,estado'=1 do ME^%CSUTIUD("Essa opção é inválido!") quit 0
+	if estado'="0",estado'="1" do ME^%CSUTIUD("Essa opção é inválido!") quit 0
 	;
 	do HabBotGeral^%CSW1("btImprimir",estado)
 	do HabBotGeral^%CSW1("btImprimirZebra",estado)
@@ -186,7 +190,7 @@ HabilitarDesabilitarBotoes(estado)	;
 	;
 	quit $$$OK
 	;
-	; Imprimir Etiqueta
+	; # Imprimir Etiqueta
 ImprimiEti	;
 	set sc=$$Iniciar^%CSW1RAW()
 	;
@@ -197,7 +201,7 @@ ImprimiEti	;
 	do Finalizar^%CSW1RAW()
 	quit
 	;
-	; Zebra
+	; # Zebra
 ImprimiEtiZebra	;
 	set sc=$$Iniciar^%CSW1RAW()
 	;
@@ -208,8 +212,7 @@ ImprimiEtiZebra	;
 	do Finalizar^%CSW1RAW() 
 	quit
 	;
-	;
-	;
+	; # Eltron
 ImprimiEtiEltron	;
 	set sc=$$Iniciar^%CSW1RAW()
 	;
@@ -220,7 +223,7 @@ ImprimiEtiEltron	;
 	do Finalizar^%CSW1RAW() 
 	quit
 	;
-	; Método Show
+	; # Método Show
 	;
 Show(%cswP1,%cswP2,%cswP3,%cswP4)	;
 	do Show^%CSW1UTI("YYCFVIMPETQ300",$get(%cswP1),$get(%cswP2),$get(%cswP3),$get(%cswP4))
