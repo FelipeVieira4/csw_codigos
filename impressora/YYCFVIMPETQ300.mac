@@ -160,7 +160,7 @@ F7ETIPE	do SetF7^%CSW1UTI(%codret) quit
 	;
 	; # F7 do usuário
 	;
-F7USU	do ^%CSUTIPE("10","","Usuários",10,"^YYCFVUSUARIOPONTEIRO(CE,@1)",,,,,,"F7USUPE^YYCFVIMPETQ300")
+F7USU	do ^%CSUTIPE("10","","Usuários",10,"^YYCFVUSUARIO(CE,@1)",,,,,,"F7USUPE^YYCFVIMPETQ300")
 	quit:$$CSP^%CSW1UTI()
 	;
 	;
