@@ -1,0 +1,184 @@
+YYCFVIMPETQ300RG	; ?? 05/2024  - SEM TÍTULO - REGRAS
+	;
+	#include %CSUTICSP
+	;
+	;
+GravarUsuario(codEmpresa,nomeUsuario)	;
+	$$$VAR
+	;
+	do $$$SetG(^YYCFVUSUARIO(codEmpresa,nomeUsuario),nomeUsuario)
+	;
+	quit $$$OK
+	;
+VerUsuario(codEmpresa,nomeUsuario)	;
+	$$$VAR
+	new sc
+	set sc=""
+	;
+	set nomeUsuario=$get(^YYCFVUSUARIO(codEmpresa,nomeUsuario))
+	;
+	if sc="" quit $$$ERROR(10000,"Usuário não encontrado!")
+	;
+	quit $$$OK
+	;
+	;
+	;
+GravarEtiquete(codEmpresa,nomeUsuario,codEtiqueta,yyCfvImpetq)	;
+	$$$VAR
+	;
+	do $$$SetG(^YYCFVIMPETQ(codEmpresa,nomeUsuario,codEtiqueta),yyCfvImpetq)
+	;
+	quit $$$OK
+	;
+	;
+	;
+SugerirEtiqueta(codEmpresa,nomeUsuario,codEtiqueta)	;
+	$$$VAR
+	;
+	set codEtiqueta=""
+	set codEtiqueta=$order(^YYCFVIMPETQ(codEmpresa,nomeUsuario,""),-1)+1
+	;
+	quit $$$OK
+	;
+	;
+	;
+VerEtiqueta(codEmpresa,nomeUsuario,codEtiqueta,yyCfvImpetq)	;
+	$$$VAR
+	set yyCfvImpetq=""
+	set yyCfvImpetq=$get(^YYCFVIMPETQ(codEmpresa,nomeUsuario,codEtiqueta))
+	if yyCfvImpetq="" quit $$$ERROR(10000,"Etiqueta não encontrado!")
+	;
+	quit $$$OK
+	;
+	;
+	;
+ExclurEtiqueta(codEmpresa,nomeUsuario,codEtiqueta)	;
+	$$$VAR
+	;
+	do $$$KillG(^YYCFVIMPETQ(codEmpresa,nomeUsuario,codEtiqueta))
+	;
+	quit $$$OK
+	;
+	; Datamax
+	;
+ImprimirEtiqueta(codEmpresa,nomeUsuario,codEtiqueta)	;
+	$$$VAR
+	new yyCfvImpetq
+	;
+	set yyCfvImpetq=""
+	set yyCfvImpetq=$get(^YYCFVIMPETQ(codEmpresa,nomeUsuario,codEtiqueta))
+	if yyCfvImpetq="" quit $$$ERROR(10000,"Etiqueta não encontrado!")
+	;
+	write /chr(2),/cmd("n")
+	write /chr(2),/cmd("M0739")
+	write /chr(2),/cmd("O0220")
+	write /chr(2),/cmd("V0")
+	write /chr(2),/cmd("f330")
+	write /chr(1),/cmd("D")
+	write /chr(2),/cmd("L")
+	write /cmd("D11")
+	write /cmd("A2")
+	; 
+	; Dados
+	;
+	; # Quadrado Geral
+	write /cmd("1X0100000400060b0300061200010001")
+	;
+	; # 1º ETIQUETA
+	;posiçãoXdimensão
+	; # Título
+	write /cmd("1X0100000400020b0100061200010001")
+	write /cmd("2611100"_"0500"_"0310"_"ETIQUETA")
+	;
+	; # 2º NOME
+	write /cmd("1X0100003400260b0038030000010001")
+	write /cmd("231110006000270"_"Nome do Usuario ")
+	;
+	write /cmd("2311100"_"0480"_"0270"_nomeUsuario)
+	;
+	; # Código Etiqueta
+	write /cmd("1X0100001000260b0038022500010001")
+	write /cmd("23111000300270"_" Codigo "_codEtiqueta)
+	;
+	; Linha 1
+	write /cmd("1X0100001000220b0038055000010001")
+	write /cmd("23111000600230"_" Linha 1:"_$piece(yyCfvImpetq,z,1))
+	;
+	; Linha 2
+	write /cmd("1X0100001000180b0038055000010001")
+	write /cmd("23111000600190"_" Linha 2:"_$piece(yyCfvImpetq,z,2))
+	;
+	; Linha 3
+	write /cmd("1X0100001000140b0038055000010001")
+	write /cmd("23111000600150"_" Linha 3:"_$piece(yyCfvImpetq,z,3))
+	;
+	write /cmd("Q0001")
+	write /cmd("E")
+	;
+	;
+	quit $$$OK
+	;
+	; Zebra
+	;
+ImprimirEtiquetaZebra(codEmpresa,nomeUsuario,codEtiqueta)	;
+	$$$VAR
+	new yyCfvImpetq
+	;
+	set yyCfvImpetq=""
+	set yyCfvImpetq=$get(^YYCFVIMPETQ(codEmpresa,nomeUsuario,codEtiqueta))
+	if yyCfvImpetq="" quit $$$ERROR(10000,"Etiqueta não encontrado!")
+	;
+	write /cmd("^XA")
+	write /cmd("^FX Top section with logo, name and address.")
+	write /cmd("^CF0,60")
+	write /cmd("^FO220,50^FDEtiqueta^FS")
+	write /cmd("^CF0,30")
+	write /cmd("^FO400,195^FDCodigo Etiqueta:"_codEtiqueta_"^FS")
+	write /cmd("^FO150,195^FDCliente:"_nomeUsuario_"^FS")
+	write /cmd("^CF0,30")
+	;
+	write /cmd("^FO50,250^GB700,3,3^FS")
+	;
+	write /cmd("^FO100,300^FDLinha 1:"_$piece(yyCfvImpetq,z,1)_"^FS")
+	write /cmd("^FO100,360^FDLinha 2:"_$piece(yyCfvImpetq,z,2)_"^FS")
+	write /cmd("^FO100,420^FDLinha 3:"_$piece(yyCfvImpetq,z,3)_"^FS")
+	write /cmd("^XZ")	
+	;
+	quit $$$OK
+	;
+	; Eltron
+	;
+ImprimirEtiquetaEltron(codEmpresa,nomeUsuario,codEtiqueta)	;
+	$$$VAR
+	new yyCfvImpetq,alturaEtiquetaDots,codEntrada,descEmpresaVisitante,descResponsavel
+	new descSetor,descVisitante,larguraEtiquetaDots,sc
+	;
+	set yyCfvImpetq=""
+	set yyCfvImpetq=$get(^YYCFVIMPETQ(codEmpresa,nomeUsuario,codEtiqueta))
+	if yyCfvImpetq="" quit $$$ERROR(10000,"Etiqueta não encontrado!")
+	;
+	set descVisitante="teste"
+	;
+	write /cmd("FK")
+	write /cmd("N")
+	write /cmd("D"_2)
+	write /cmd("S"_5)
+	write /cmd("ZB")
+	write /cmd("Q"_830_",024")
+	write /cmd("q"_660)
+	;
+	; Dados
+	;
+	write /cmd("A50,50,0,1,2,2,N,""Usuario:"_nomeUsuario_"""")
+	write /cmd("A50,80,0,1,2,2,N,""Codigo Etiqueta:"_codEtiqueta_"""")
+	;
+	write /cmd("A50,140,0,1,2,2,N,""Linha 1:"_$piece(yyCfvImpetq,z,1)_"""")
+	write /cmd("A50,200,0,1,2,2,N,""Linha 2:"_$piece(yyCfvImpetq,z,2)_"""")
+	write /cmd("A50,260,0,1,2,2,N,""Linha 3:"_$piece(yyCfvImpetq,z,3)_"""")
+	;
+	write /cmd("P1")
+	;
+	quit $$$OK
+	;
+	;
+	; csw:csp:naogerar
