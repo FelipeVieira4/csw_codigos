@@ -61,13 +61,9 @@ ExclurEtiqueta(codEmpresa,nomeUsuario,codEtiqueta)	;
 	;
 	; Datamax
 	;
-ImprimirEtiqueta(codEmpresa,nomeUsuario,codEtiqueta)	;
+ImprimirEtiqueta(codEmpresa,nomeUsuario,codEtiqueta,yyCfvImpetq)	;
 	$$$VAR
-	new yyCfvImpetq
-	;
-	set yyCfvImpetq=""
-	set yyCfvImpetq=$get(^YYCFVIMPETQ(codEmpresa,nomeUsuario,codEtiqueta))
-	if yyCfvImpetq="" quit $$$ERROR(10000,"Etiqueta não encontrado!")
+	if yyCfvImpetq="" quit $$$ERROR(10000,"Etiqueta nula!")
 	;
 	write /chr(2),/cmd("n")
 	write /chr(2),/cmd("M0739")
@@ -84,13 +80,11 @@ ImprimirEtiqueta(codEmpresa,nomeUsuario,codEtiqueta)	;
 	; # Quadrado Geral
 	write /cmd("1X0100000400060b0300061200010001")
 	;
-	; # 1º ETIQUETA
-	;posiçãoXdimensão
 	; # Título
 	write /cmd("1X0100000400020b0100061200010001")
 	write /cmd("2611100"_"0500"_"0310"_"ETIQUETA")
 	;
-	; # 2º NOME
+	; # NOME
 	write /cmd("1X0100003400260b0038030000010001")
 	write /cmd("231110006000270"_"Nome do Usuario ")
 	;
@@ -100,15 +94,15 @@ ImprimirEtiqueta(codEmpresa,nomeUsuario,codEtiqueta)	;
 	write /cmd("1X0100001000260b0038022500010001")
 	write /cmd("23111000300270"_" Codigo "_codEtiqueta)
 	;
-	; Linha 1
+	; # Linha 1
 	write /cmd("1X0100001000220b0038055000010001")
 	write /cmd("23111000600230"_" Linha 1:"_$piece(yyCfvImpetq,z,1))
 	;
-	; Linha 2
+	; # Linha 2
 	write /cmd("1X0100001000180b0038055000010001")
 	write /cmd("23111000600190"_" Linha 2:"_$piece(yyCfvImpetq,z,2))
 	;
-	; Linha 3
+	; # Linha 3
 	write /cmd("1X0100001000140b0038055000010001")
 	write /cmd("23111000600150"_" Linha 3:"_$piece(yyCfvImpetq,z,3))
 	;
@@ -120,13 +114,10 @@ ImprimirEtiqueta(codEmpresa,nomeUsuario,codEtiqueta)	;
 	;
 	; Zebra
 	;
-ImprimirEtiquetaZebra(codEmpresa,nomeUsuario,codEtiqueta)	;
+ImprimirEtiquetaZebra(codEmpresa,nomeUsuario,codEtiqueta,yyCfvImpetq)	;
 	$$$VAR
-	new yyCfvImpetq
 	;
-	set yyCfvImpetq=""
-	set yyCfvImpetq=$get(^YYCFVIMPETQ(codEmpresa,nomeUsuario,codEtiqueta))
-	if yyCfvImpetq="" quit $$$ERROR(10000,"Etiqueta não encontrado!")
+	if yyCfvImpetq="" quit $$$ERROR(10000,"Etiqueta nula!")
 	;
 	write /cmd("^XA")
 	write /cmd("^FX Top section with logo, name and address.")
@@ -148,16 +139,10 @@ ImprimirEtiquetaZebra(codEmpresa,nomeUsuario,codEtiqueta)	;
 	;
 	; Eltron
 	;
-ImprimirEtiquetaEltron(codEmpresa,nomeUsuario,codEtiqueta)	;
+ImprimirEtiquetaEltron(codEmpresa,nomeUsuario,codEtiqueta,yyCfvImpetq)	;
 	$$$VAR
-	new yyCfvImpetq,alturaEtiquetaDots,codEntrada,descEmpresaVisitante,descResponsavel
-	new descSetor,descVisitante,larguraEtiquetaDots,sc
 	;
-	set yyCfvImpetq=""
-	set yyCfvImpetq=$get(^YYCFVIMPETQ(codEmpresa,nomeUsuario,codEtiqueta))
-	if yyCfvImpetq="" quit $$$ERROR(10000,"Etiqueta não encontrado!")
-	;
-	set descVisitante="teste"
+	if yyCfvImpetq="" quit $$$ERROR(10000,"Etiqueta nula!")
 	;
 	write /cmd("FK")
 	write /cmd("N")

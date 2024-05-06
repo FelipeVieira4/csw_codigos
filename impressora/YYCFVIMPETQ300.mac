@@ -196,7 +196,7 @@ ImprimiEti	;
 	;
 	if $$$ISERR(sc) quit sc
 	;
-	set sc=$$ImprimirEtiqueta^YYCFVIMPETQ300RG(CE,NOME,CODETI)
+	set sc=$$ImprimirEtiqueta^YYCFVIMPETQ300RG(CE,NOME,CODETI,.YYCFVIMPETQ300)
 	;
 	do Finalizar^%CSW1RAW()
 	quit
@@ -207,7 +207,7 @@ ImprimiEtiZebra	;
 	;
 	if $$$ISERR(sc) quit sc
 	;
-	set sc=$$ImprimirEtiquetaZebra^YYCFVIMPETQ300RG(CE,NOME,CODETI)
+	set sc=$$ImprimirEtiquetaZebra^YYCFVIMPETQ300RG(CE,NOME,CODETI,.YYCFVIMPETQ300)
 	;
 	do Finalizar^%CSW1RAW() 
 	quit
@@ -218,7 +218,7 @@ ImprimiEtiEltron	;
 	;
 	if $$$ISERR(sc) do ME^%CS1UTI(sc) quit sc
 	;
-	set sc=$$ImprimirEtiquetaEltron^YYCFVIMPETQ300RG(CE,NOME,CODETI)
+	set sc=$$ImprimirEtiquetaEltron^YYCFVIMPETQ300RG(CE,NOME,CODETI,.YYCFVIMPETQ300)
 	;
 	do Finalizar^%CSW1RAW() 
 	quit
