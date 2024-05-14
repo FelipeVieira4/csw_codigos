@@ -1,0 +1,156 @@
+GCAETTGT600	; 05/2024 - MONITOR DE PARTIDAS EM ABERTOS
+	;
+	#include %CSUTICSP
+	;
+0000	do New^%CSW1UTI("%PRG,%codret,CODCOL,CODDET,CODREG,CT,DATPAR,DETALHA,LINHA,TABGRID,sc")
+	new %PRG,%codret,CODCOL,CODDET,CODREG,CT,DATPAR,DETALHA,LINHA,TABGRID,sc
+	;
+	set %PRG="GCAETTGT600",CT=%index
+	;
+	set sc=$$ValidarExecucaoCSW^%CSUTIRG001()
+	if $$$ISERR(sc) do ME^%CSUTICSP(sc) goto 9999
+	;
+	; csw:aj:108,28
+	do AJ^%CSUTIUD(,,"Monitor de Partidas em Aberto")
+	;
+0500	if '$data(^GCAETTGT(CE,2)) do ME^%CSUTIUD("Não há dados a serem mostrados para a empresa "_CE_"!") goto 9999
+	;
+	do 9000
+	;
+	do 2000
+	;
+1999	quit:$$CSP^%CSW1UTI()
+	;
+2000	set sc=$$Limpar^%CSW1GRID(CT,%PRG,1)
+	;
+	do AG^%CSUTIUD(,"2000AG^GCAETTGT600")
+	quit:$$CSP^%CSW1UTI()
+	;
+2000AG	set sc=$$GerarGlobalTrabalho^GCAETTGT600RG(CE,CT)
+	;
+	set sc=$$GravarGrid^GCAETTGT600RG(CE,CT,%PRG,1)
+	;
+	do FJAG^%CSW1UTI
+	;
+	set sc=$$ValidarDisplay^%CSW1GRID(CT,%PRG,1)
+	if $$$ISERR(sc) do ME^%CSUTICSP(sc) goto 0500
+	;
+	set sc=$$Movimentar^%CSW1GRID(CT,%PRG,1,,1)
+	;
+	goto FocusGrid
+	;
+	; # Obter Dados Linha
+	;
+3050	set sc=$$ObterDadosLinha^%CSW1GRID(CT,%PRG,1,,.DETALHA,.LINHA,.CODREG)
+	set CODDET=$piece(DETALHA,Z,1)
+	;
+	quit
+	;
+	; # Abrir CCTTGT010
+	;
+3400	do 3050	
+	;
+	do Show^CCTTGT010("3400EX^GCAETTGT600","(,$piece(DETALHA,z,2),$piece(DETALHA,z,3))")
+	quit:$$CSP^%CSW1UTI()
+	;
+3400EX	quit:$$CSP^%CSW1UTI()
+	;
+	; # Abrir o CCPV700CSW (pedido)
+	;
+3500	do 3050	
+	;
+	if $piece(DETALHA,Z,4)=-1 goto F7PED 
+	;
+3510	if $piece(DETALHA,Z,4)="" goto 3500EX ; Cancelou F7 pular a tela
+	;
+	do Show^CCPV700CSW("3500EX^GCAETTGT600","($piece(DETALHA,z,4))")
+	quit:$$CSP^%CSW1UTI()
+	;
+3500EX	quit:$$CSP^%CSW1UTI()
+	;
+	; # Abrir CCTTP605CSW
+	;
+3600	do 3050	
+	;
+	set DATPAR=$piece(DETALHA,Z,6)_Z_$piece(DETALHA,Z,7)
+	;
+	do Show^CCTTP605("3600EX^GCAETTGT600","(DATPAR,,$piece(DETALHA,z,8))")
+	quit:$$CSP^%CSW1UTI()
+	;
+3600EX	quit:$$CSP^%CSW1UTI()
+	;
+	; # Tela
+	;
+9000	do Clear^%CSW1UTI()
+	do Enable^%CSW1UTI()
+	;
+	; # Grid
+	;
+	set sc=$$Limpar^%CSW1GRID(CT,%PRG,1)
+	;
+	kill TABGRID(1)
+	;
+	set TABGRID(1)="; csw:gridConf:cod=1; LinPos=4; Altura=16; LinIni=4; LinFim=20; LbLinha=3050^GCAETTGT600; LabelEdit=TbCellClick^GCAETTGT600; HabilitaNavegacao=1;"
+	;
+	set TABGRID(1,1)="; csw:gridCols:cod=1; Tipo=a; Csw=08^Partida Utech^1^^^^^1;"
+	set TABGRID(1,2)="; csw:gridCols:cod=1; Tipo=a; Csw=08^Partida Alenice^2^^^^^1;"
+	set TABGRID(1,3)="; csw:gridCols:cod=1; Tipo=n; Csw=08^Parque Fabril^3;"
+	set TABGRID(1,4)="; csw:gridCols:cod=1; Tipo=a; Csw=20^Descrição^4;"
+	set TABGRID(1,5)="; csw:gridCols:cod=1; Tipo=n; Csw=05^Prioridade^5;"
+	set TABGRID(1,6)="; csw:gridCols:cod=1; Tipo=a; Csw=10^Descrição^6;"
+	set TABGRID(1,7)="; csw:gridCols:cod=1; Tipo=a; Csw=10^Pedido^7^^^^^1;"
+	;
+	set sc=$$AtuConfGrid^%CSW1GRID2(CT,%PRG,1,.TABGRID)
+	set sc=$$Inicializar^%CSW1GRID(CT,%PRG,1,.TABGRID)
+	;
+	quit
+	;
+	; # Fim
+	;
+9999	set sc=$$ExcluirGlobalTrabalho^GCAETTGT600RG(CT)
+	set sc=$$Finalizar^%CSW1GRID(CT,%PRG,1)
+	;
+	do FJ^%CSW1UTI
+	;
+	quit
+	;
+	; # Validate
+Validate()	;
+	quit $$$OK
+	;
+	; F7 Pedidos
+	;
+F7PED	set %codret=""
+	if %=27 do SetF7^%CSW1UTI("") quit
+	set sc=$$GerarF7Pedidos^GCAETTGT600RG(CT,$piece(DETALHA,Z,3),$piece(DETALHA,Z,5))
+	do ^%CSUTIPE("3,15,15","1,2","Pedidos,Empresa Utech,Partida Utech",10,"^mtempPEDIDOS600(CT,@1)",,,,,,"F7PEDMBPE^GCAETTGT600")
+	quit:$$CSP^%CSW1UTI()
+	;
+F7PEDMBPE	set $piece(DETALHA,Z,4)=%codret
+	do SetF7^%CSW1UTI(%codret)
+	goto 3510	; Voltar e abrir a tela de visualização de pedidos
+	;
+	; # Método Show()
+	;
+Show(%cswP1,%cswP2,%cswP3,%cswP4)	;
+	do Show^%CSW1UTI("GCAETTGT600",$get(%cswP1),$get(%cswP2),$get(%cswP3),$get(%cswP4)) quit
+	;
+	; # Método TbCellClick()
+TbCellClick(%cswLin,%cswCol)	;
+	;
+	set CODCOL=$piece(%cswCol,Y,1)
+	if CODCOL=1 goto 3400
+	if CODCOL=2 goto 3600
+	if CODCOL=7 goto 3500
+	;
+	goto FocusGrid
+	;
+	; # Método FocusGrid()
+	;
+FocusGrid	do Focus^%CSW1GRID3(CT,%PRG,1,1) quit
+	;
+	; csw:botao:0,23,btAtualizar,<u>A</u>tualizar,a,2000^GCAETTGT600,,Atualizar Partidas,10
+	;
+	; csw:labelcreate:GCAETTGT600
+	; csw:labeldestroy:9999
+	; csw:csp:gerar
