@@ -1,0 +1,149 @@
+GCAETTGT600RG	; 05/2024 - MONITOR DE PARTIDAS EM ABERTOS - REGRA
+	;
+	#include %CSUTICSP
+	;
+	; # Excluir Global Trabalho
+	;
+ExcluirGlobalTrabalho(codTerminal)	;
+	$$$VAR
+	;
+	kill ^mtempGCAETTGT600(codTerminal)
+	kill ^mtempPEDIDOS600(codTerminal)
+	;
+	quit $$$OK
+	;
+	; # Gerar Global Trabalho
+	;
+GerarGlobalTrabalho(codEmpresa,codTerminal)	;
+	$$$VAR
+	new sc,partidaUtech,anoMes,ttppar,codEmpresaUtech,codPedido,codSequencia,empresaPedido,produtoPartida
+	;
+	; # Excluir mtemp
+	;
+	set sc=$$ExcluirGlobalTrabalho(codTerminal)
+	;
+	; # Leitura na global
+	set (codEmpresaUtech,partidaUtech,anoMes)=""
+	for  set codEmpresaUtech=$order(^GCAETTGT(codEmpresaUtech)) quit:codEmpresaUtech=""  do
+	. for  set partidaUtech=$order(^GCAETTGT(codEmpresaUtech,2,partidaUtech)) quit:partidaUtech=""  do
+	. . set sc=$$ChecarPartidaMesAno^CCTTPRG001(codEmpresaUtech,partidaUtech,.anoMes,.ttppar)
+	. . if $$$ISERR(sc) quit
+	. . ;
+	. . if $piece(ttppar,z,2)'=0 quit ; se a situação é "gerado/aberto" 
+	. . ;
+	. . ; # Buscar pedidos da partida utech
+	. . set (codSequencia,empresaPedido,codPedido,produtoPartida)=""
+	. . for  set produtoPartida=$order(^TTPPAR(codEmpresaUtech,anoMes,partidaUtech,produtoPartida)) quit:produtoPartida=""  do
+	. . . for  set codSequencia=$order(^TTPPAR(codEmpresaUtech,anoMes,partidaUtech,produtoPartida,9,codSequencia)) quit:codSequencia=""  do
+	. . . . for  set empresaPedido=$order(^TTPPAR(codEmpresaUtech,anoMes,partidaUtech,produtoPartida,9,codSequencia,2,empresaPedido)) quit:empresaPedido=""  do
+	. . . . . for  set codPedido=$order(^TTPPAR(codEmpresaUtech,anoMes,partidaUtech,produtoPartida,9,codSequencia,2,empresaPedido,codPedido)) quit:codPedido=""  do
+	. . . . . . ;
+	. . . . . . ;# Gravar mtemp
+	. . . . . . set ^mtempGCAETTGT600(codTerminal,codEmpresaUtech,anoMes,partidaUtech,codPedido)=""
+	;
+	quit $$$OK
+	;
+	; # Gravar Grid
+	;
+GravarGrid(codEmpresa,codTerminal,rotina,codGrid,codRegistro)	;
+	$$$VAR
+	new partidaUtech,anoMes,sc,codEmpresaUtech,codPedido
+	;
+	; # Obter codRegistro
+	set codRegistro=$get(codRegistro)
+	;
+	; # Leitura na mtemp
+	set (codEmpresaUtech,anoMes,partidaUtech,codPedido)=""
+	for  set codEmpresaUtech=$order(^mtempGCAETTGT600(codTerminal,codEmpresaUtech)) quit:codEmpresaUtech=""  do
+	. for  set anoMes=$order(^mtempGCAETTGT600(codTerminal,codEmpresaUtech,anoMes)) quit:anoMes=""  do
+	. . for  set partidaUtech=$order(^mtempGCAETTGT600(codTerminal,codEmpresaUtech,anoMes,partidaUtech)) quit:partidaUtech=""  do
+	. . . set codPedido=""
+	. . . ;
+	. . . ; # Puxar segundo piece do codPedido
+	. . . set codPedido=$order(^mtempGCAETTGT600(codTerminal,codEmpresaUtech,anoMes,partidaUtech,codPedido))
+	. . . set codPedido=$order(^mtempGCAETTGT600(codTerminal,codEmpresaUtech,anoMes,partidaUtech,codPedido))
+	. . . ;
+	. . . ; # Caso tenha mais de um pedido
+	. . . if codPedido'="" do
+	. . . . set sc=$$AtualizarLinhaGrid(codEmpresaUtech,codTerminal,rotina,codGrid,codEmpresaUtech,partidaUtech,anoMes,-1,codRegistro)
+	. . . . quit
+	. . . else  do
+	. . . . set codPedido=$order(^mtempGCAETTGT600(codTerminal,codEmpresaUtech,anoMes,partidaUtech,codPedido),-1) 
+	. . . . set sc=$$AtualizarLinhaGrid(codEmpresaUtech,codTerminal,rotina,codGrid,codEmpresaUtech,partidaUtech,anoMes,codPedido,codRegistro)
+	;
+	quit $$$OK
+	;
+	; # Atualizar Linha Grid
+	;
+AtualizarLinhaGrid(codEmpresa,codTerminal,rotina,codGrid,codEmpresaUtech,partidaUtech,anoMes,codPedido,codRegistro)	;
+	$$$VAR
+	new corFonte,corFundo,dados,detalha,display,negrito,sc,partidaAlenice,gcaettgt2,anoMesAlenice,empresaAlenice
+	new tgattab,ttgtab28,ttppar,despri,ttpparAle
+	;
+	set (gcaettgt2,ttgtab28,ttppar,tgattab)=""
+	;
+	set sc=$$ObterEmpresasConfiguradas^GCAETTGT005RG(codEmpresa,.codEmpresaUtech,.empresaAlenice)
+	;
+	set sc=$$ObterPartidaAlenice^GCAETTGT005RG(codEmpresaUtech,partidaUtech,.partidaAlenice)
+	;
+	set sc=$$ChecarPartidaMesAno^CCTTPRG001(codEmpresaUtech,partidaUtech,anoMes,.ttppar)
+	;
+	set sc=$$ChecarPartidaMesAno^CCTTPRG001(empresaAlenice,partidaAlenice,.anoMesAlenice,.ttpparAle)
+	;
+	set sc=$$ObterConfiguracaoPartida^GCAETTGT005RG(codEmpresa,.gcaettgt2)
+	set sc=$$VerParqueFabril^CCTTGRG008(codEmpresa,$piece(ttppar,z,55),.ttgtab28)
+	;
+	set tgattab=$get(^TGATTAB(codEmpresa,1,$piece(ttppar,z,3)))
+	set despri=$piece(tgattab,Z,1)
+	;
+	;
+	; # Inicializar variáveis
+	set (dados,display,detalha,corFundo,corFonte,negrito)=""
+	;
+	; # Dados
+	set $piece(dados,z,1)=partidaUtech
+	set $piece(dados,z,2)=partidaAlenice
+	;
+	set $piece(dados,z,3)=$piece(ttppar,z,55)
+	set $piece(dados,z,4)=$piece(ttgtab28,z,1)
+	;
+	set $piece(dados,z,5)=$piece(ttppar,z,3)
+	set $piece(dados,z,6)=despri
+	;
+	if codPedido=-1 set $piece(dados,z,7)="Vários"
+	else  set $piece(dados,z,7)=codPedido
+	;
+	; # Display
+	set display=dados
+	;
+	; # Detalha
+	set $piece(detalha,z,1)=$piece(ttppar,z,1)	;Tipo Partida
+	set $piece(detalha,z,2)=anoMes		;Ano/Mes Partida
+	set $piece(detalha,z,3)=partidaUtech		;Código Partida
+	set $piece(detalha,z,4)=codPedido		;Código Pedido
+	set $piece(detalha,z,5)=codEmpresaUtech		;Código Empresa Utech
+	set $piece(detalha,z,6)=anoMesAlenice		;Ano/Mes Partida Alenice
+	set $piece(detalha,z,7)=partidaAlenice		;Código Empresa Alenice
+	set $piece(detalha,z,8)=empresaAlenice		;Código Partida Alenice
+	;
+	set sc=$$GravarLinhas^%CSW1GRID(codTerminal,rotina,codGrid,dados,display,detalha,codRegistro,corFundo,corFonte,negrito)
+	;
+	quit $$$OK
+	;
+	; # F7 de Pedidos
+	;
+GerarF7Pedidos(codTerminal,partidaUtech,codEmpresaUtech)	;
+	$$$VAR
+	new codPedido,anoMes,sc,ttppar
+	;
+	kill ^mtempPEDIDOS600(codTerminal)
+	;
+	set sc=$$ChecarPartidaMesAno^CCTTPRG001(codEmpresaUtech,partidaUtech,.anoMes,.ttppar)
+	;
+	set codPedido=""
+	for  set codPedido=$order(^mtempGCAETTGT600(codTerminal,codEmpresaUtech,anoMes,partidaUtech,codPedido)) quit:codPedido=""  do
+	. set ^mtempPEDIDOS600(codTerminal,codPedido)=codEmpresaUtech_z_partidaUtech
+	;
+	quit $$$OK
+	;
+	; csw:csp:naogerar
