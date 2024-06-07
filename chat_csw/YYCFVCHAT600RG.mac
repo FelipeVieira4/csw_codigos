@@ -1,0 +1,75 @@
+YYCFVCHAT600RG	; ?? 06/2024  - PÁGINA INICIAL DO CHAT - REGRAS
+	;
+	#include %CSUTICSP
+	;
+ExcluirGlobalTrabalho(codTerminal)	;
+	$$$VAR
+	;
+	kill ^mtempYYCFVCHAT600(codTerminal)
+	;
+	quit $$$OK
+	;
+	; Gerar Global Trabalho
+	;
+GerarGlobalTrabalho(codEmpresa,codTerminal,codUsuario)	;
+	$$$VAR
+	new sc,codigo
+	;
+	; # Excluir mtemp
+	set sc=$$ExcluirGlobalTrabalho(codTerminal)
+	;
+	; # Leitura na global
+	set codigo=""
+	for  set codigo=$order(^YYCFVCONTA100(codEmpresa,4,codUsuario,codigo)) quit:codigo=""  do
+	. ;
+	. set ^mtempYYCFVCONTA100(codEmpresa,codTerminal,codUsuario,codigo)=""
+	;
+	quit $$$OK
+	;
+	; Gravar Grid
+	;
+GravarGrid(codEmpresa,codTerminal,rotina,codUsuario,codGrid,codRegistro)	;
+	$$$VAR
+	new codigo,sc
+	;
+	; # Obter codRegistro
+	set codRegistro=$get(codRegistro)
+	;
+	; # Leitura na mtemp
+	set (codigo)=""
+	for  set codigo=$order(^mtempYYCFVCONTA100(codEmpresa,codTerminal,codUsuario,codigo)) quit:codigo=""  do
+	. set sc=$$AtualizarLinhaGrid(codEmpresa,codTerminal,rotina,codGrid,codigo,codRegistro)
+	;
+	quit $$$OK
+	;
+	; Atualizar Linha Grid
+	;
+AtualizarLinhaGrid(codEmpresa,codTerminal,rotina,codGrid,codigo,codRegistro)	;
+	$$$VAR
+	new corFonte,corFundo,dados,detalha,display,mtempYYCFVCHAT600,negrito,sc,nome,descricao
+	;
+	; # Inicializar variáveis
+	set (dados,display,detalha,corFundo,corFonte,negrito)=""
+	;
+	; # Obter dados da mtemp
+	set mtempYYCFVCHAT600=$get(^YYCFVCHAT600(codEmpresa,codigo))
+	;
+	set nome=$piece(mtempYYCFVCHAT600,z,1)
+	set descricao=$piece(mtempYYCFVCHAT600,z,2)
+	;
+	; # Dados
+	set $piece(dados,z,1)=nome
+	set $piece(dados,z,2)=descricao
+	;
+	; # Display
+	set $piece(display,z,1)=nome
+	set $piece(display,z,2)=descricao
+	;
+	; # Detalha
+	set $piece(detalha,z,1)=codigo
+	;
+	set sc=$$GravarLinhas^%CSW1GRID(codTerminal,rotina,codGrid,dados,display,detalha,codRegistro,corFundo,corFonte,negrito)
+	;
+	quit $$$OK
+	;
+	; csw:csp:naogerar

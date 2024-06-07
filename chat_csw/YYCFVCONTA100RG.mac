@@ -1,0 +1,139 @@
+YYCFVCONTA100RG	; ?? 06/2024  - SEM TÍTULO - REGRAS
+	;
+	#include %CSUTICSP
+	;
+	; Gerar código increment para usuário
+	;
+SugerirCodigoUsuario(codEmpresa,codUsuario)	;
+	$$$VAR
+	;
+	set codUsuario=$order(^YYCFVCONTA100(codEmpresa,2,""),-1)
+	set codUsuario=$increment(codUsuario)
+	if codUsuario="" set codUsuario=0
+	;
+	quit $$$OK
+	;
+	; Gerar token para usuário	- EX "435-KSNJFJS-534-WDF"
+	;
+SugerirTokenUsuario(codEmpresa,tokenUsuario)	;
+	$$$VAR
+	new i,numeroOuLetra
+	;
+	set tokenUsuario=$random(999999999)
+	set tokenUsuario=tokenUsuario_"-"
+	;
+	for i=1:1:10 do
+	. set numeroOuLetra=$random(99)
+	. if numeroOuLetra#2=0 set tokenUsuario=tokenUsuario_$char(65+$random(25))
+	. else  set tokenUsuario=tokenUsuario_$random(9)
+	;
+	set tokenUsuario=tokenUsuario_$random(999999999)
+	set tokenUsuario=tokenUsuario_"-"
+	set tokenUsuario=tokenUsuario_$random(999999999)
+	;
+	quit $$$OK
+	;
+	; Salvar informações do usuário
+	;
+SalvarUsuario(codEmpresa,YyCfvConta100,tokenUsuario)	;
+	$$$VAR
+	new sc,mtempYycfvconta200,codigoUsuario
+	;
+	set tokenUsuario=""
+	;
+	set sc=$$SugerirTokenUsuario(codEmpresa,.tokenUsuario)
+	set sc=$$SugerirCodigoUsuario(codEmpresa,.codigoUsuario)
+	;
+	set $piece(mtempYycfvconta200,z,1)=$piece(YyCfvConta100,z,1)
+	set $piece(mtempYycfvconta200,z,2)=$piece(YyCfvConta100,z,3)
+	set $piece(mtempYycfvconta200,z,3)=tokenUsuario
+	;
+	do $$$SetG(^YYCFVCONTA100(codEmpresa,1,$piece(YyCfvConta100,z,1)),codigoUsuario)
+	do $$$SetG(^YYCFVCONTA100(codEmpresa,2,codigoUsuario),mtempYycfvconta200)
+	do $$$SetG(^YYCFVCONTA100(codEmpresa,3,$piece(YyCfvConta100,z,2)),codigoUsuario)
+	;
+	quit $$$OK
+	;
+	; Ver se o nome é valido
+	;
+VerNomeValido(codEmpresa,nome)	;
+	$$$VAR
+	new sc,mtempYYCFVCONTA100
+	;
+	set mtempYYCFVCONTA100=$get(^YYCFVCONTA100(codEmpresa,1,nome))
+	;
+	if mtempYYCFVCONTA100'="" quit $$$ERROR(10000,"Nome já em uso!")
+	;
+	quit $$$OK
+	;
+	; Logar com usuário
+	;
+ValidarLogin(codEmpresa,nomeEmail,senha,codUsuario)	;
+	$$$VAR
+	new sc,mtempYYCFVCONTA100,codigoUsuario
+	;
+	set codigoUsuario=$get(^YYCFVCONTA100(codEmpresa,3,nomeEmail))
+	if codigoUsuario="" set codigoUsuario=$get(^YYCFVCONTA100(codEmpresa,1,nomeEmail))
+	;
+	if codigoUsuario="" quit $$$ERROR(10000,"Nome/Email não encontrado!")
+	;
+	set sc=$$VerUsuario(codEmpresa,codigoUsuario,.mtempYYCFVCONTA100)
+	;
+	if $$$ISERR(sc) quit $$$ERROR(10000,"Usuário não encontrado!")
+	;
+	if senha'=$piece(mtempYYCFVCONTA100,z,2) quit $$$ERROR(10000,"Senha inválida!")
+	;
+	set codUsuario=codigoUsuario
+	;
+	quit $$$OK
+	;
+	; Ver se o nome é valido
+	;
+VerEmailValido(codEmpresa,email)	;
+	$$$VAR
+	new sc,mtempYYCFVCONTA100
+	;
+	set mtempYYCFVCONTA100=$get(^YYCFVCONTA100(codEmpresa,3,email))
+	;
+	if mtempYYCFVCONTA100'="" quit $$$ERROR(10000,"Email já em uso!")
+	;
+	quit $$$OK
+	;
+	; Ver usuário pelo nome
+	;
+VerUsuarioPorNome(codEmpresa,nome,YyCfvConta100)	;
+	$$$VAR
+	new codigoUsuario,sc
+	;
+	set codigoUsuario=$get(^YYCFVCONTA100(codEmpresa,1,nome))
+	set sc=$$VerUsuario(codEmpresa,codigoUsuario,.YyCfvConta100)
+	;
+	if $$$ISERR(sc) quit sc
+	;
+	quit $$$OK
+	;
+	; Ver usuário pelo código
+	;
+VerUsuario(codEmpresa,codUsuario,YyCfvConta100)	;
+	$$$VAR
+	;
+	set YyCfvConta100=$get(^YYCFVCONTA100(codEmpresa,2,codUsuario))
+	;
+	if YyCfvConta100="" quit $$$ERROR(10000,"Usuário não existe!")
+	; 
+	quit $$$OK
+	;
+	; Ver usuário pelo email
+	;
+VerUsuarioPorEmail(codEmpresa,emailUsuario,YyCfvConta100)	;
+	$$$VAR
+	new codigoUsuario,sc
+	;
+	set codigoUsuario=$get(^YYCFVCONTA100(codEmpresa,3,emailUsuario))
+	set sc=$$VerUsuario(codEmpresa,codigoUsuario,.YyCfvConta100)
+	;
+	if $$$ISERR(sc) quit sc
+	;
+	quit $$$OK
+	;
+	; csw:csp:naogerar

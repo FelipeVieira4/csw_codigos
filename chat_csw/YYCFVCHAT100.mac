@@ -1,0 +1,131 @@
+YYCFVCHAT100	; CFV 06/2024  - Login No Chat
+	;
+	#include %CSUTICSP
+	;
+0000	do New^%CSW1UTI("%PRG,CODUSU,CT,YYCFVCONTA100,flag,sc")
+	new %PRG,CODUSU,CT,YYCFVCONTA100,flag,sc
+	;
+	set %PRG="YYCFVCHAT100",CT=%index
+	;
+	; csw:aj:108,28,
+	do AJ^%CSUTIUD(,,"Login No Chat")
+	;
+0500	set YYCFVCONTA100=""
+	;
+	do 9000
+	;
+	; Campo - nome da conta ou email do usuário
+1000	;
+1000ON	do ^%CSLE(1,10,50,"$piece(YYCFVCONTA100,Z,1)",$piece(YYCFVCONTA100,Z,1),"",1,,",,,cp1000,,,20")
+	quit:$$CSP^%CSW1UTI()
+1000EX	goto 0500:%=140,9999:%=27
+	;
+	if '$$Valcp1000() goto 1000
+	;
+	; Campo - senha da conta do usuário
+1100	;
+1100ON	do ^%CSLE(2,10,24,"$piece(YYCFVCONTA100,Z,2)",$piece(YYCFVCONTA100,Z,2),"",1,,",,,cp1100,,,20")
+	quit:$$CSP^%CSW1UTI()
+1100EX	goto 1000EX:%=140,9999:%=27
+	;
+	if '$$Valcp1100() goto 1100
+	;
+	;
+1999	do HabBotGeral^%CSW1("btLogar",1)
+	do Focus^%CSW1UTI(%PRG,"btLogar")
+	quit:$$CSP^%CSW1UTI()
+	;
+	; Logar
+	;
+4000	set sc=$$Validate()
+	if $$$ISERR(sc) goto 1999
+	;
+	set sc=$$ValidarLogin^YYCFVCONTA100RG(CE,$piece(YYCFVCONTA100,Z,1),$piece(YYCFVCONTA100,Z,2),.CODUSU)
+	;
+	do Show^YYCFVCHAT600("4000EX^YYCFVCHAT100","(CODUSU,$piece(YYCFVCONTA100,Z,2))")
+	quit:$$CSP^%CSW1UTI()
+	;
+4000EX	goto 1999
+	quit $$$OK
+	;
+	; Cadastrar
+	;
+4100	set sc=$$Validate()
+	if $$$ISERR(sc) goto 1999
+	do Show^YYCFVCHAT120("4100EX^YYCFVCHAT100","()")
+	quit:$$CSP^%CSW1UTI()
+	;
+4100EX	goto 1999
+	quit $$$OK
+	;
+	; Resgatar Nome
+	;
+4200	quit $$$OK
+	;
+	; Alterar Senha
+	;
+4300	quit $$$OK
+	;
+	; Tela
+	;
+9000	do Clear^%CSW1UTI()
+	do Enable^%CSW1UTI()
+	;
+	do HabBotGeral^%CSW1("btLogar",0)
+	;
+	quit
+	;
+	; Fim
+	;
+9999	;
+	do FJ^%CSW1UTI
+	quit
+	;
+	; Valcp1000 - Validar Nome/Email do Usuário
+Valcp1000()	;
+	if $piece(YYCFVCONTA100,Z,1)="" do ME^%CSUTIUD("E-mail/Nome: Campo Obrigatório!") quit 0
+	;
+	set sc=$$VerEmailValido^YYCFVCONTA100RG(CE,$piece(YYCFVCONTA100,Z,1))
+	set flag=$$VerNomeValido^YYCFVCONTA100RG(CE,$piece(YYCFVCONTA100,Z,1))
+	;
+	if '$$$ISERR(sc),'$$$ISERR(flag) do ME^%CSUTIUD("E-mail/Nome: Valores não encontrados!") quit 0
+	;
+	quit $$$OK
+	;
+	; Valcp1200 - Validar Senha do Usuário
+Valcp1100()	;
+	if $piece(YYCFVCONTA100,Z,2)="" do ME^%CSUTIUD("Senha: Valor Obrigatório!") quit 0
+	;
+	set sc=$$ValidarLogin^YYCFVCONTA100RG(CE,$piece(YYCFVCONTA100,Z,1),$piece(YYCFVCONTA100,Z,2))
+	;
+	if $$$ISERR(sc) do ME^%CSUTICSP(sc) quit 0
+	;
+	quit $$$OK
+	;
+	; Método Validate
+	;
+Validate()	;
+	if '$$Valcp1000() do Focus^%CSW1UTI(%PRG,"cp1000") quit 0
+	if '$$Valcp1100() do Focus^%CSW1UTI(%PRG,"cp1100") quit 0
+	;
+	quit $$$OK
+	;
+	; Método Show
+	;
+Show(%cswP1,%cswP2,%cswP3,%cswP4)	;
+	do Show^%CSW1UTI("YYCFVCHAT100",$get(%cswP1),$get(%cswP2),$get(%cswP3),$get(%cswP4))
+	quit
+	;
+	; Montar Tela CSW
+	; csw:label:3,1,7,Nome/Email*
+	; csw:label:3,2,7,Senha*
+	; 
+	; csw:botao:10,4,btLogar,<u>L</u>ogin,l,4000^YYCFVCHAT100,,Login,10
+	; csw:botao:22,4,btCadastrar,<u>C</u>adastrar,c,4100^YYCFVCHAT100,,Cadastrar,10
+	; 
+	; csw:botao:36,4,btResgatar,<u>R</u>esgatar Nome,r,4200^YYCFVCHAT100,,Resgatar Nome,10
+	; csw:botao:47,4,btAlterSenha,<u>A</u>lterar Senha,a,4300^YYCFVCHAT100,,Alterar Senha,10
+	;
+	; csw:labelcreate:YYCFVCHAT100
+	; csw:labeldestroy:9999
+	; csw:csp:gerar
