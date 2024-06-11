@@ -1,0 +1,168 @@
+YYCFVOS020RG	; CFV 06/2024  - CADASTRO DE SERVIÇO - REGRAS
+	;
+	#include %CSUTICSP
+	;
+SalvarOS(codEmpresa,yyCfvOs)	;
+	$$$VAR
+	quit $$$OK
+	;
+	;
+
+	;
+GerarGlobalCriados(codEmpresa,codTerminal,codOS,codChamada)	;
+	$$$VAR
+	new sc,codigo
+	;
+	; # Excluir mtemp
+	;set sc=$$ExcluirGlobalTrabalho(codTerminal)
+	;
+	; # Leitura na global
+	set codigo=""
+	for  set codigo=$order(^YYCFVOS(codEmpresa,2,codOS,codChamada,codigo)) quit:codigo=""  do
+	. new mtempCriaods
+	. set $piece(mtempCriaods,z,1)=codOS
+	. set $piece(mtempCriaods,z,2)=codChamada
+	. ;
+	. set $piece(mtempCriaods,z,3)=$piece($get(^YYCFVOS(codEmpresa,2,codOS,codChamada,codigo)),z,1)
+	. set $piece(mtempCriaods,z,4)=$piece($get(^YYCFVOS(codEmpresa,2,codOS,codChamada,codigo)),z,2)
+	. ;
+	. set ^mtempCriados(codTerminal,codigo)=mtempCriaods
+	;
+	quit $$$OK
+	;
+	;
+	;
+GravarGridCriados(codEmpresa,codTerminal,rotina,codGrid,codRegistro)	;
+	$$$VAR
+	new codigo,sc
+	;
+	; # Obter codRegistro
+	set codRegistro=$get(codRegistro)
+	;
+	; # Leitura na mtemp
+	set (codigo)=""
+	for  set codigo=$order(^mtempCriados(codTerminal,codigo)) quit:codigo=""  do
+	. set sc=$$AtualizarLinhaGrid(codEmpresa,codTerminal,rotina,codGrid,codigo,codRegistro)
+	;
+	quit $$$OK
+	;
+	;
+	;
+GerarGlobalEditados(codEmpresa,codTerminal,codOS,codChamada)	;
+	$$$VAR
+	new sc,codigo,mtempEditados
+	;
+	; # Excluir mtemp
+	;set sc=$$ExcluirGlobalTrabalho(codTerminal)
+	;
+	; # Leitura na global
+	set codigo=""
+	for  set codigo=$order(^YYCFVOS(codEmpresa,3,codOS,codChamada,codigo)) quit:codigo=""  do
+	. ;
+	. set $piece(mtempEditados,z,1)=codOS
+	. set $piece(mtempEditados,z,2)=codChamada
+	. ;
+	. set $piece(mtempEditados,z,3)=$piece($get(^YYCFVOS(codEmpresa,3,codOS,codChamada,codigo)),z,1)
+	. set $piece(mtempEditados,z,4)=$piece($get(^YYCFVOS(codEmpresa,3,codOS,codChamada,codigo)),z,2)
+	. ;
+	. set ^mtempEditados(codTerminal,codigo)=mtempEditados
+	;
+	quit $$$OK
+	;
+GravarGridEditados(codEmpresa,codTerminal,rotina,codGrid,codRegistro)	;
+	$$$VAR
+	new codigo,sc
+	;
+	; # Obter codRegistro
+	set codRegistro=$get(codRegistro)
+	;
+	; # Leitura na mtemp
+	set (codigo)=""
+	for  set codigo=$order(^mtempEditados(codTerminal,codigo)) quit:codigo=""  do
+	. set sc=$$AtualizarLinhaGrid(codEmpresa,codTerminal,rotina,codGrid,codigo,codRegistro)
+	;
+	quit $$$OK
+	;
+	;
+	;
+AtualizarLinhaGrid(codEmpresa,codTerminal,rotina,codGrid,codigo,codRegistro)	;
+	$$$VAR
+	new corFonte,corFundo,dados,detalha,display,negrito,sc,nome,descricao,mtempRotina
+	;
+	; # Inicializar variáveis
+	set (dados,display,detalha,corFundo,corFonte,negrito,nome,mtempRotina)=""
+	;
+	; # Obter dados da mtemp
+	if codGrid=1 set mtempRotina=$get(^mtempCriados(codTerminal,codigo))
+	if codGrid=2 set mtempRotina=$get(^mtempEditados(codTerminal,codigo))
+	;
+	set nome=$piece(mtempRotina,z,3)
+	set descricao=$piece(mtempRotina,z,4)
+	;
+	; # Dados
+	set $piece(dados,z,1)=nome
+	set $piece(dados,z,2)=descricao
+	;
+	set $piece(display,z,1)=nome
+	set $piece(display,z,2)=descricao
+	;
+	; # Detalha
+	set $piece(detalha,z,1)=codigo
+	set $piece(detalha,z,2)=nome
+	set $piece(detalha,z,3)=descricao
+	;
+	set sc=$$GravarLinhas^%CSW1GRID(codTerminal,rotina,codGrid,dados,display,detalha,codRegistro,corFundo,corFonte,negrito)
+	;
+	quit $$$OK
+	;
+	;
+	;
+GravarCodigoCriados(codEmpresa,codTerminal,codigo,globalCriados)	;
+	$$$VAR
+	;
+	do $$$SetG(^mtempCriados(codTerminal,codigo),globalCriados)
+	;
+	quit $$$OK
+	;
+	;
+	;
+SalvarMtempEditados(codEmpresa,codTerminal,yyCfvOs)	;
+	$$$VAR
+	new codigo,codOS,codChamado
+	;
+	set codOS=$piece(yyCfvOs,z,1)
+	set codChamado=$piece(yyCfvOs,z,2)
+	;
+	set (codigo)=""
+	for  set codigo=$order(^mtempEditados(codTerminal,codigo)) quit:codigo=""  do
+	. do $$$SetG(^YYCFVOS(codEmpresa,3,codOS,codChamado,codigo),$get(^mtempEditados(codTerminal,codigo)))
+	;
+	quit $$$OK
+	;
+	;
+	;
+SalvarMtempCriados(codEmpresa,codTerminal,yyCfvOs)	;
+	$$$VAR
+	new codigo,codOS,codChamado,fixa
+	;
+	set codOS=$piece(yyCfvOs,z,1)
+	set codChamado=$piece(yyCfvOs,z,2)
+	;
+	set (codigo)=""
+	for  set codigo=$order(^mtempCriados(codTerminal,codigo)) quit:codigo=""  do
+	. do $$$SetG(^YYCFVOS(codEmpresa,2,codOS,codChamado,codigo),$get(^mtempCriados(codTerminal,codigo)))
+	;
+	quit $$$OK
+	;
+	;
+ObterUltimoCod(codEmpresa,codTerminal,codGrid,codArquivo)	;
+	$$$VAR
+	;
+	if codGrid=1 set codArquivo=$order(^mtempCriados(codTerminal,""),-1)
+	if codGrid=2 set codArquivo=$order(^mtempEditados(codTerminal,""),-1)
+	;
+	if codArquivo="" set codArquivo=0
+	;
+	quit $$$OK
+	;
+	; csw:csp:naogerar

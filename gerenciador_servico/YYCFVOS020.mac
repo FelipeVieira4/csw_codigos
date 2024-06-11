@@ -1,0 +1,277 @@
+YYCFVOS020	; CFV 06/2024 - CADASTRO DE SERVIÇO
+	;
+	#include %CSUTICSP
+	;
+0000	do New^%CSW1UTI("%PRG,ARQMAN,CODDET,CODIGO,CODREG,DETALHA,LINHA,OPECRI,TABGRID,YYCFVOS")
+	new %PRG,ARQMAN,CODDET,CODIGO,CODREG,DETALHA,LINHA,OPECRI,TABGRID,YYCFVOS
+	do New^%CSW1UTI("CT,sc")
+	new CT,sc
+	;
+	set %PRG="YYCFVOS020",CT=%index
+	;
+	; csw:aj:108,28
+	do AJ^%CSUTIUD(,,"Cadastrar/Editar Serviço")
+	;
+0500	do 9000
+	set (YYCFVOS,OPECRI)=""
+	;
+	set $piece(YYCFVOS,Z,1)=1
+	set $piece(YYCFVOS,Z,2)=1
+	;
+	do 2000
+	do 2100
+	;
+	; # Campo 1000 - OS 
+1000	;
+1000ON	do ^%CSLE(1,10,6,"$piece(YYCFVOS,Z,1)",$piece(YYCFVOS,Z,1),"@'?.N",1,,",,,cp1000")
+	quit:$$CSP^%CSW1UTI()
+1000EX	goto 0500:%=140,9999:%=27
+	;
+	if '$$Valcp1000() goto 1000
+	;
+	; Campo 1100 - Chamado
+1100	;
+1100ON	do ^%CSLE(2,10,6,"$piece(YYCFVOS,Z,2)",$piece(YYCFVOS,Z,2),,"",,",,,cp1100")
+	quit:$$CSP^%CSW1UTI()
+1100EX	goto 1000:%=140,9999:%=27
+	;
+	if '$$Valcp1100() goto 1100
+	;
+	; Campo 1200 - Analista
+1200	;
+1200ON	do ^%CSLE(3,10,30,"$piece(YYCFVOS,Z,3)",$piece(YYCFVOS,Z,3),,"",,",,,cp1200,,,15")
+	quit:$$CSP^%CSW1UTI()
+1200EX	goto 1100:%=140,9999:%=27
+	;
+	if '$$Valcp1200() goto 1200
+	;
+	; Campo 1300 - Documentação
+1300	;
+1300ON	do ^%CSW1UTITXTAREA(4,10,10000,"$piece(YYCFVOS,Z,4)",$piece(YYCFVOS,Z,4),,",cp1300",50,6,1)
+	quit:$$CSP^%CSW1UTI()
+1300EX	goto 1200:%=140,9999:%=27
+	;
+	if '$$Valcp1300() goto 1300
+	;
+	; Campo 2000 - Arquivos Criados
+	; 
+2000	if '$$Validate() quit
+	;
+	set sc=$$Limpar^%CSW1GRID(CT,%PRG,1)
+	;
+	do AG^%CSUTIUD(,"2000AG^YYCFVOS020")
+	quit:$$CSP^%CSW1UTI()
+	;
+2000AG	set sc=$$GerarGlobalCriados^YYCFVOS020RG(CE,CT,1,1)
+	set sc=$$GravarGridCriados^YYCFVOS020RG(CE,CT,%PRG,1)
+	;
+	do FJAG^%CSW1UTI
+	;
+	set sc=$$ValidarDisplay^%CSW1GRID(CT,%PRG,1)
+	if $$$ISERR(sc) do ME^%CSUTICSP(sc) goto 1000
+	;
+	set sc=$$Movimentar^%CSW1GRID(CT,%PRG,1,,1)
+	;
+	goto FocusGrid1
+	;
+	; #Gravar nova linha
+	;
+2010	set sc=$$IncluirLinha^%CSW1GRID2(CT,%PRG,1)
+	if $$$ISERR(sc) do ME^%CSUTICSP(sc) goto FocusGrid1
+	;
+	set OPECRI="A"
+	; #Fazer manutenção/adicão linha
+	;
+2020	set sc=$$ModoManutencao^%CSW1GRID(CT,%PRG,1,1)
+	if OPECRI="" set OPECRI="M"
+	;
+	do 3050
+	;
+	if OPECRI="M" do
+	. set CODIGO=CODDET
+	;
+	;
+	if OPECRI="A" do
+	. set sc=$$ObterUltimoCod^YYCFVOS020RG(CE,CT,1,.CODIGO)
+	. set CODIGO=$increment(CODIGO)
+	;
+	;
+	kill ARQMAN
+	;
+	set $piece(ARQMAN,Z,1)=$piece(YYCFVOS,Z,1)
+	set $piece(ARQMAN,Z,2)=$piece(YYCFVOS,Z,2)
+	; # Código
+2021	;
+2021ON	do ^%CSLE(LINHA,1,14,"$piece(ARQMAN,Z,3)",$piece(ARQMAN,Z,3),,,,",,,cp2021,,,,,,0,3,3,1")
+	quit:$$CSP^%CSW1UTI()
+	;
+2021EX	goto 2060:%=27,2060:%=140
+	if '$$Valcp2021() goto 2021
+	;
+	; # Descrição
+2022	;
+2022ON	do ^%CSLE(LINHA,2,32,"$piece(ARQMAN,Z,4)",$piece(ARQMAN,Z,4),,,,",,1,cp2022,,,,,,0,3,3,1")
+	quit:$$CSP^%CSW1UTI()
+	;
+2022EX	goto 2060:%=27,2021:%=140
+	if '$$Valcp2022() goto 2022
+	;
+	;
+2050	set sc=$$GravarCodigoCriados^YYCFVOS020RG(CE,CT,CODIGO,ARQMAN)
+	;set sc=$$AtualizarGlobalTrabalho^YYCFVOS020RG(CE,CT,ARQMAN,CODIGO)
+	;
+	set sc=$$AtualizarLinhaGrid^YYCFVOS020RG(CE,CT,%PRG,1,CODIGO,CODREG)
+	set sc=$$AtualizarLinhaGrid^%CSW1GRID2(CT,%PRG,1,LINHA,CODREG)
+	set sc=$$Movimentar^%CSW1GRID(CT,%PRG,1,141)
+	;
+	;if OP="I" do MECABECALHO^%CSW1UTI("Adicionado com Sucesso!")
+	;if OP="M" do MECABECALHO^%CSW1UTI("Editado com Sucesso!")
+	;
+	; Fim Manutenção
+	;
+2060	set sc=$$ModoManutencao^%CSW1GRID(CT,%PRG,1,0,0)
+	;
+	;do HabilitarDesabilitarBotoes(1)
+	;
+	set (OPECRI)=""
+	;
+	goto FocusGrid1
+	;
+	; Campo 2100 - Arquivos Editados
+	;
+2100	if '$$Validate() quit
+	;
+	set sc=$$Limpar^%CSW1GRID(CT,%PRG,2)
+	;
+	do AG^%CSUTIUD(,"2100AG^YYCFVOS020")
+	quit:$$CSP^%CSW1UTI()
+	;
+2100AG	set sc=$$GerarGlobalEditados^YYCFVOS020RG(CE,CT,1,1)
+	set sc=$$GravarGridEditados^YYCFVOS020RG(CE,CT,%PRG,2)
+	;
+	do FJAG^%CSW1UTI
+	;
+	set sc=$$ValidarDisplay^%CSW1GRID(CT,%PRG,2)
+	if $$$ISERR(sc) do ME^%CSUTICSP(sc) goto 1000
+	;
+	set sc=$$Movimentar^%CSW1GRID(CT,%PRG,2,,1)
+	;
+	goto FocusGrid2
+	;
+3050	set sc=$$ObterDadosLinha^%CSW1GRID(CT,%PRG,1,,.DETALHA,.LINHA,.CODREG)
+	set CODDET=$piece(DETALHA,Z,1)
+	;
+	quit
+	;
+3060	set sc=$$ObterDadosLinha^%CSW1GRID(CT,%PRG,2,,.DETALHA,.LINHA,.CODREG)
+	set CODDET=$piece(DETALHA,Z,1)
+	;
+	quit
+	;
+9000	do Clear^%CSW1UTI()
+	do Enable^%CSW1UTI()
+	;
+	set sc=$$Limpar^%CSW1GRID(CT,%PRG,1)
+	;
+	kill TABGRID(1)
+	;
+	set TABGRID(1)="; csw:gridConf:cod=1; LinPos=10; Altura=4; LinIni=4; LinFim=40; ColPos=10; TamTab=48; LbLinha=3050^YYCFVOS020; LabelEdit=TbCellClick^YYCFVOS020; HabilitaNavegacao=1;"
+	;
+	set TABGRID(1,1)="; csw:gridCols:cod=1; Tipo=a; Csw=10^Nome^1^^^1;"
+	set TABGRID(1,2)="; csw:gridCols:cod=1; Tipo=a; Csw=20^Descrição^2^^^1;"
+	;
+	set sc=$$AtuConfGrid^%CSW1GRID2(CT,%PRG,1,.TABGRID)
+	set sc=$$Inicializar^%CSW1GRID(CT,%PRG,1,.TABGRID)
+	;
+	;
+	set sc=$$Limpar^%CSW1GRID(CT,%PRG,2)
+	;
+	kill TABGRID(2)
+	;
+	set TABGRID(2)="; csw:gridConf:cod=2; LinPos=17; Altura=4; LinIni=4; LinFim=40; ColPos=10; TamTab=48; LbLinha=3060^YYCFVOS020; LabelEdit=TbCellClick2^YYCFVOS020; HabilitaNavegacao=1;"
+	;
+	set TABGRID(2,1)="; csw:gridCols:cod=2; Tipo=a; Csw=10^Nome^1;"
+	set TABGRID(2,2)="; csw:gridCols:cod=2; Tipo=a; Csw=20^Descrição^2;"
+	;
+	set sc=$$AtuConfGrid^%CSW1GRID2(CT,%PRG,2,.TABGRID)
+	set sc=$$Inicializar^%CSW1GRID(CT,%PRG,2,.TABGRID)
+	;
+	;
+	quit
+	;
+	; Fim
+	;
+9999	set sc=$$Finalizar^%CSW1GRID(CT,%PRG,1)
+	set sc=$$Finalizar^%CSW1GRID(CT,%PRG,2)
+	do FJ^%CSW1UTI
+	quit
+	;
+	; # Valcp1000 - Cadastro da OS
+Valcp1000()	;
+	quit $$$OK
+	;
+	; # Valcp1100 - Chamada
+	;
+Valcp1100()	;
+	quit $$$OK
+	;
+	; # Valcp1200 - Analista
+	;
+Valcp1200()	;
+	quit $$$OK
+	;
+	; # Valcp1300 - Documentação
+	;
+Valcp1300()	;
+	quit $$$OK
+	;
+	; # Valcp2021 - Arquivo Criados - NOME
+Valcp2021()	;
+	quit $$$OK	
+	;
+	; # Valcp2022 - Arquivo Criados - DESCRIÇÃO
+Valcp2022()	;
+	quit $$$OK
+	;
+	; # Método Validate
+Validate()	;
+	quit $$$OK
+	;
+	;
+	;
+TbCellClick(%cswLin,%cswCol)	;
+	goto FocusGrid1
+	;
+TbCellClick2(%cswLin,%cswCol)	;
+	goto FocusGrid2
+	;
+	; Método Show
+	;
+Show(%cswP1,%cswP2,%cswP3,%cswP4)	;
+	do Show^%CSW1UTI("YYCFVOS020",$get(%cswP1),$get(%cswP2),$get(%cswP3),$get(%cswP4))
+	quit
+	;
+FocusGrid1	do Focus^%CSW1GRID3(CT,%PRG,1,1) quit
+FocusGrid2	do Focus^%CSW1GRID3(CT,%PRG,2,1) quit
+	;
+	; Montar Tela CSW
+	; csw:label:1,1,9,OS*
+	; csw:label:1,2,9,Chamado*
+	; csw:label:1,3,9,Analista*
+	; csw:label:1,4,9,Documentação*
+	; csw:label:1,10,9,Arquivos Criados*
+	; csw:label:1,17,9,Arquivos Alterados*
+	;
+	; csw:botao:50,11,btCriaCriar,A<u>d</u>icionar,d,2010^YYCFVOS020,,Adicionar Rotinas Criadas,10
+	; csw:botao:50,13,btCriaEditar,Ed<u>i</u>tar,i,2020^YYCFVOS020,,Editar Rotinas Criadas,10
+	; csw:botao:50,15,btCriaExcluir,Exc<u>l</u>uir,l,2050^YYCFVOS020,,Excluir Rotinas Criadas,10
+	;
+	; csw:botao:50,18,btEditCriar,<u>A</u>dicionar,a,2110^YYCFVOS020,,Adicionar Rotinas Modificadas,10
+	; csw:botao:50,20,btEditEditar,Edita<u>r</u>,r,2120^YYCFVOS020,,Editar Rotinas Modificadas,10
+	; csw:botao:50,22,btEditExcluir,E<u>x</u>cluir,x,2130^YYCFVOS020,,Excluir Rotinas Modificadas,10
+	;
+	; csw:btnManter:10,25,3000^YYCFVOS020,0500^YYCFVOS020,Excluir^YYCFVOS020
+	;
+	; csw:labelcreate:YYCFVOS020
+	; csw:labeldestroy:9999
+	; csw:csp:gerar
