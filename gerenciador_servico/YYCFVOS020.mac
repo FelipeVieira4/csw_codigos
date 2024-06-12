@@ -4,8 +4,8 @@ YYCFVOS020	; CFV 06/2024 - CADASTRO DE SERVIÇO
 	;
 0000	do New^%CSW1UTI("%PRG,ARQMAN,CODDET,CODIGO,CODREG,DETALHA,LINHA,OPECRI,TABGRID,YYCFVOS")
 	new %PRG,ARQMAN,CODDET,CODIGO,CODREG,DETALHA,LINHA,OPECRI,TABGRID,YYCFVOS
-	do New^%CSW1UTI("CT,sc")
-	new CT,sc
+	do New^%CSW1UTI("CT,SN,sc")
+	new CT,SN,sc
 	;
 	set %PRG="YYCFVOS020",CT=%index
 	;
@@ -21,31 +21,35 @@ YYCFVOS020	; CFV 06/2024 - CADASTRO DE SERVIÇO
 	do 2000
 	do 2100
 	;
+	;do EnableCp^%CSW1UTI("cp1000")
 	; # Campo 1000 - OS 
 1000	;
-1000ON	do ^%CSLE(1,10,6,"$piece(YYCFVOS,Z,1)",$piece(YYCFVOS,Z,1),"@'?.N",1,,",,,cp1000")
+1000ON	do ^%CSLE(1,10,6,"$piece(YYCFVOS,Z,1)",$piece(YYCFVOS,Z,1),"@'?.N",1,,",,,cp1000,,,,,,,,1")
 	quit:$$CSP^%CSW1UTI()
 1000EX	goto 0500:%=140,9999:%=27
 	;
 	if '$$Valcp1000() goto 1000
 	;
-	; Campo 1100 - Chamado
+	; # Campo 1100 - Chamado
 1100	;
-1100ON	do ^%CSLE(2,10,6,"$piece(YYCFVOS,Z,2)",$piece(YYCFVOS,Z,2),,"",,",,,cp1100")
+1100ON	do ^%CSLE(2,10,6,"$piece(YYCFVOS,Z,2)",$piece(YYCFVOS,Z,2),,"",,",,,cp1100,,,,,,,1,1")
 	quit:$$CSP^%CSW1UTI()
 1100EX	goto 1000:%=140,9999:%=27
 	;
 	if '$$Valcp1100() goto 1100
 	;
-	; Campo 1200 - Analista
+	do Enable^%CSW1UTI("cp1000,cp1100")
+	do HabilitarDesabilitarBotoes(1)
+	;
+	; # Campo 1200 - Analista
 1200	;
 1200ON	do ^%CSLE(3,10,30,"$piece(YYCFVOS,Z,3)",$piece(YYCFVOS,Z,3),,"",,",,,cp1200,,,15")
 	quit:$$CSP^%CSW1UTI()
-1200EX	goto 1100:%=140,9999:%=27
+1200EX	goto 0500:%=140,9999:%=27
 	;
 	if '$$Valcp1200() goto 1200
 	;
-	; Campo 1300 - Documentação
+	; # Campo 1300 - Documentação
 1300	;
 1300ON	do ^%CSW1UTITXTAREA(4,10,10000,"$piece(YYCFVOS,Z,4)",$piece(YYCFVOS,Z,4),,",cp1300",50,6,1)
 	quit:$$CSP^%CSW1UTI()
@@ -53,7 +57,7 @@ YYCFVOS020	; CFV 06/2024 - CADASTRO DE SERVIÇO
 	;
 	if '$$Valcp1300() goto 1300
 	;
-	; Campo 2000 - Arquivos Criados
+	; # Campo 2000 - Arquivos Criados
 	; 
 2000	if '$$Validate() quit
 	;
@@ -74,13 +78,17 @@ YYCFVOS020	; CFV 06/2024 - CADASTRO DE SERVIÇO
 	;
 	goto FocusGrid1
 	;
-	; #Gravar nova linha
+	; # Gravar nova linha
 	;
 2010	set sc=$$IncluirLinha^%CSW1GRID2(CT,%PRG,1)
 	if $$$ISERR(sc) do ME^%CSUTICSP(sc) goto FocusGrid1
 	;
 	set OPECRI="A"
-	; #Fazer manutenção/adicão linha
+	;
+	kill ARQMAN
+	set ARQMAN=""
+	;
+	; # Fazer manutenção/adicão linha
 	;
 2020	set sc=$$ModoManutencao^%CSW1GRID(CT,%PRG,1,1)
 	if OPECRI="" set OPECRI="M"
@@ -89,6 +97,10 @@ YYCFVOS020	; CFV 06/2024 - CADASTRO DE SERVIÇO
 	;
 	if OPECRI="M" do
 	. set CODIGO=CODDET
+	. ;
+	. if '$data(ARQMAN) set ARQMAN=""
+	. set $piece(ARQMAN,Z,1)=$piece(DETALHA,Z,2)
+	. set $piece(ARQMAN,Z,2)=$piece(DETALHA,Z,3)
 	;
 	;
 	if OPECRI="A" do
@@ -96,44 +108,55 @@ YYCFVOS020	; CFV 06/2024 - CADASTRO DE SERVIÇO
 	. set CODIGO=$increment(CODIGO)
 	;
 	;
-	kill ARQMAN
-	;
-	set $piece(ARQMAN,Z,1)=$piece(YYCFVOS,Z,1)
-	set $piece(ARQMAN,Z,2)=$piece(YYCFVOS,Z,2)
+	do HabilitarDesabilitarBotoes(0)
 	; # Código
 2021	;
-2021ON	do ^%CSLE(LINHA,1,14,"$piece(ARQMAN,Z,3)",$piece(ARQMAN,Z,3),,,,",,,cp2021,,,,,,0,3,3,1")
+2021ON	do ^%CSLE(LINHA,1,14,"$piece(ARQMAN,Z,1)",$piece(ARQMAN,Z,1),,,,",,,cp2021,,,,,,0,3,3,1")
 	quit:$$CSP^%CSW1UTI()
 	;
 2021EX	goto 2060:%=27,2060:%=140
-	if '$$Valcp2021() goto 2021
+	if '$$Valcp2X21() goto 2021
 	;
 	; # Descrição
 2022	;
-2022ON	do ^%CSLE(LINHA,2,32,"$piece(ARQMAN,Z,4)",$piece(ARQMAN,Z,4),,,,",,1,cp2022,,,,,,0,3,3,1")
+2022ON	do ^%CSLE(LINHA,2,32,"$piece(ARQMAN,Z,2)",$piece(ARQMAN,Z,2),,,,",,1,cp2022,,,,,,0,3,3,1")
 	quit:$$CSP^%CSW1UTI()
 	;
 2022EX	goto 2060:%=27,2021:%=140
-	if '$$Valcp2022() goto 2022
+	if '$$Valcp2X22() goto 2022
 	;
 	;
-2050	set sc=$$GravarCodigoCriados^YYCFVOS020RG(CE,CT,CODIGO,ARQMAN)
-	;set sc=$$AtualizarGlobalTrabalho^YYCFVOS020RG(CE,CT,ARQMAN,CODIGO)
+2050	set sc=$$GravarCodigo^YYCFVOS020RG(CE,CT,1,CODIGO,ARQMAN)
 	;
 	set sc=$$AtualizarLinhaGrid^YYCFVOS020RG(CE,CT,%PRG,1,CODIGO,CODREG)
 	set sc=$$AtualizarLinhaGrid^%CSW1GRID2(CT,%PRG,1,LINHA,CODREG)
 	set sc=$$Movimentar^%CSW1GRID(CT,%PRG,1,141)
 	;
-	;if OP="I" do MECABECALHO^%CSW1UTI("Adicionado com Sucesso!")
-	;if OP="M" do MECABECALHO^%CSW1UTI("Editado com Sucesso!")
-	;
 	; Fim Manutenção
 	;
 2060	set sc=$$ModoManutencao^%CSW1GRID(CT,%PRG,1,0,0)
 	;
-	;do HabilitarDesabilitarBotoes(1)
-	;
 	set (OPECRI)=""
+	;
+	do HabilitarDesabilitarBotoes(1)
+	;
+	goto FocusGrid1
+	;
+	; Excluir linha
+	;
+2070	do SN^%CSUTIUD(,,,"Deseja remover a arquivo selecionada?","N","2070SN^YYCFVOS020")
+	quit:$$CSP^%CSW1UTI()
+	;
+2070SN	if SN'="S" goto FocusGrid1
+	;
+	do 3050
+	;
+	set CODIGO=$piece(DETALHA,Z,1)
+	;
+	set sc=$$ExcluirCodigo^YYCFVOS020RG(CT,1,CODIGO)
+	set sc=$$ExcluirLinha^%CSW1GRID2(CT,%PRG,1,,,,CODREG)
+	;
+	do MECABECALHO^%CSW1UTI("Removido com Sucesso!")
 	;
 	goto FocusGrid1
 	;
@@ -158,6 +181,90 @@ YYCFVOS020	; CFV 06/2024 - CADASTRO DE SERVIÇO
 	;
 	goto FocusGrid2
 	;
+	;
+	; # Gravar nova linha
+	;
+2110	set sc=$$IncluirLinha^%CSW1GRID2(CT,%PRG,2)
+	if $$$ISERR(sc) do ME^%CSUTICSP(sc) goto FocusGrid2
+	;
+	set OPECRI="A"
+	;
+	kill ARQMAN
+	set ARQMAN=""
+	;
+	; # Fazer manutenção/adicão linha
+	;
+2120	set sc=$$ModoManutencao^%CSW1GRID(CT,%PRG,2,1)
+	if OPECRI="" set OPECRI="M"
+	;
+	do 3060
+	;
+	if OPECRI="M" do
+	. set CODIGO=CODDET
+	. ;
+	. if '$data(ARQMAN) set ARQMAN=""
+	. set $piece(ARQMAN,Z,1)=$piece(DETALHA,Z,2)
+	. set $piece(ARQMAN,Z,2)=$piece(DETALHA,Z,3)
+	;
+	;
+	if OPECRI="A" do
+	. set sc=$$ObterUltimoCod^YYCFVOS020RG(CE,CT,2,.CODIGO)
+	. set CODIGO=$increment(CODIGO)
+	;
+	;
+	do HabilitarDesabilitarBotoes(0)
+	; # Código
+2121	;
+2121ON	do ^%CSLE(LINHA,1,14,"$piece(ARQMAN,Z,1)",$piece(ARQMAN,Z,1),,,,",,,cp2121,,,,,,0,3,3,2")
+	quit:$$CSP^%CSW1UTI()
+	;
+2121EX	goto 2160:%=27,2160:%=140
+	if '$$Valcp2X21() goto 2121
+	;
+	; # Descrição
+2122	;
+2122ON	do ^%CSLE(LINHA,2,32,"$piece(ARQMAN,Z,2)",$piece(ARQMAN,Z,2),,,,",,1,cp2122,,,,,,0,3,3,2")
+	quit:$$CSP^%CSW1UTI()
+	;
+2122EX	goto 2160:%=27,2121:%=140
+	if '$$Valcp2X22() goto 2122
+	;
+	;
+2150	set sc=$$GravarCodigo^YYCFVOS020RG(CE,CT,2,CODIGO,ARQMAN)
+	;
+	set sc=$$AtualizarLinhaGrid^YYCFVOS020RG(CE,CT,%PRG,2,CODIGO,CODREG)
+	set sc=$$AtualizarLinhaGrid^%CSW1GRID2(CT,%PRG,2,LINHA,CODREG)
+	set sc=$$Movimentar^%CSW1GRID(CT,%PRG,2,141)
+	;
+	; Fim Manutenção
+	;
+2160	set sc=$$ModoManutencao^%CSW1GRID(CT,%PRG,2,0,0)
+	;
+	set (OPECRI)=""
+	;
+	do HabilitarDesabilitarBotoes(1)
+	;
+	goto FocusGrid2
+	;
+	; Excluir linha
+	;
+2170	do SN^%CSUTIUD(,,,"Deseja remover a arquivo selecionada?","N","2170SN^YYCFVOS020")
+	quit:$$CSP^%CSW1UTI()
+	;
+2170SN	if SN'="S" goto FocusGrid2
+	;
+	do 3060
+	;
+	set CODIGO=$piece(DETALHA,Z,1)
+	;
+	set sc=$$ExcluirCodigo^YYCFVOS020RG(CT,2,CODIGO)
+	set sc=$$ExcluirLinha^%CSW1GRID2(CT,%PRG,2,,,,CODREG)
+	;
+	do MECABECALHO^%CSW1UTI("Removido com Sucesso!")
+	;
+	goto FocusGrid2
+	;
+	;
 3050	set sc=$$ObterDadosLinha^%CSW1GRID(CT,%PRG,1,,.DETALHA,.LINHA,.CODREG)
 	set CODDET=$piece(DETALHA,Z,1)
 	;
@@ -169,7 +276,8 @@ YYCFVOS020	; CFV 06/2024 - CADASTRO DE SERVIÇO
 	quit
 	;
 9000	do Clear^%CSW1UTI()
-	do Enable^%CSW1UTI()
+	do Disable^%CSW1UTI()
+	do EnableCp^%CSW1UTI("cp1000")
 	;
 	set sc=$$Limpar^%CSW1GRID(CT,%PRG,1)
 	;
@@ -183,19 +291,21 @@ YYCFVOS020	; CFV 06/2024 - CADASTRO DE SERVIÇO
 	set sc=$$AtuConfGrid^%CSW1GRID2(CT,%PRG,1,.TABGRID)
 	set sc=$$Inicializar^%CSW1GRID(CT,%PRG,1,.TABGRID)
 	;
+	; # Gerar segunda GRID
 	;
 	set sc=$$Limpar^%CSW1GRID(CT,%PRG,2)
 	;
 	kill TABGRID(2)
 	;
-	set TABGRID(2)="; csw:gridConf:cod=2; LinPos=17; Altura=4; LinIni=4; LinFim=40; ColPos=10; TamTab=48; LbLinha=3060^YYCFVOS020; LabelEdit=TbCellClick2^YYCFVOS020; HabilitaNavegacao=1;"
+	set TABGRID(2)="; csw:gridConf:cod=2; LinPos=18; Altura=4; LinIni=4; LinFim=40; ColPos=10; TamTab=48; LbLinha=3060^YYCFVOS020; LabelEdit=TbCellClick2^YYCFVOS020; HabilitaNavegacao=1;"
 	;
-	set TABGRID(2,1)="; csw:gridCols:cod=2; Tipo=a; Csw=10^Nome^1;"
-	set TABGRID(2,2)="; csw:gridCols:cod=2; Tipo=a; Csw=20^Descrição^2;"
+	set TABGRID(2,1)="; csw:gridCols:cod=2; Tipo=a; Csw=10^Nome^1^^^1;"
+	set TABGRID(2,2)="; csw:gridCols:cod=2; Tipo=a; Csw=20^Descrição^2^^^1;"
 	;
 	set sc=$$AtuConfGrid^%CSW1GRID2(CT,%PRG,2,.TABGRID)
 	set sc=$$Inicializar^%CSW1GRID(CT,%PRG,2,.TABGRID)
 	;
+	do HabilitarDesabilitarBotoes(0)
 	;
 	quit
 	;
@@ -208,36 +318,55 @@ YYCFVOS020	; CFV 06/2024 - CADASTRO DE SERVIÇO
 	;
 	; # Valcp1000 - Cadastro da OS
 Valcp1000()	;
+	if $piece(YYCFVOS,Z,1)="" do ME^%CSUTIUD("OS: Campo Obrigatório!") quit 0
+	;
 	quit $$$OK
 	;
 	; # Valcp1100 - Chamada
-	;
 Valcp1100()	;
+	if $piece(YYCFVOS,Z,2)="" do ME^%CSUTIUD("CHAMADO: Campo Obrigatório!") quit 0
+	;
 	quit $$$OK
 	;
 	; # Valcp1200 - Analista
-	;
 Valcp1200()	;
+	;if $piece(YYCFVOS,Z,3)="" do ME^%CSUTIUD("ANÁLISTA: Campo Obrigatório!") quit 0
 	quit $$$OK
 	;
 	; # Valcp1300 - Documentação
-	;
 Valcp1300()	;
+	if $piece(YYCFVOS,Z,4)="" do ME^%CSUTIUD("DOCUMENTAÇÃO: Campo Obrigatório!") quit 0
+	;
 	quit $$$OK
 	;
 	; # Valcp2021 - Arquivo Criados - NOME
-Valcp2021()	;
+Valcp2X21()	;
+	if $piece(ARQMAN,Z,1)="" do ME^%CSUTIUD("NOME: Campo Obrigatório!") quit 0
 	quit $$$OK	
 	;
 	; # Valcp2022 - Arquivo Criados - DESCRIÇÃO
-Valcp2022()	;
+Valcp2X22()	;
+	if $piece(ARQMAN,Z,2)="" do ME^%CSUTIUD("DESCRIÇÃO: Campo Obrigatório!") quit 0
+	;
 	quit $$$OK
 	;
 	; # Método Validate
 Validate()	;
 	quit $$$OK
 	;
+	; Habilidater/Desabilitados todos os botões
 	;
+HabilitarDesabilitarBotoes(status)	;
+	;
+	do HabBotGeral^%CSW1("btCriaCriar",status)
+	do HabBotGeral^%CSW1("btCriaEditar",status)
+	do HabBotGeral^%CSW1("btCriaExcluir",status)
+	;
+	do HabBotGeral^%CSW1("btEditCriar",status)
+	do HabBotGeral^%CSW1("btEditEditar",status)
+	do HabBotGeral^%CSW1("btEditExcluir",status)
+	;
+	quit
 	;
 TbCellClick(%cswLin,%cswCol)	;
 	goto FocusGrid1
@@ -260,17 +389,17 @@ FocusGrid2	do Focus^%CSW1GRID3(CT,%PRG,2,1) quit
 	; csw:label:1,3,9,Analista*
 	; csw:label:1,4,9,Documentação*
 	; csw:label:1,10,9,Arquivos Criados*
-	; csw:label:1,17,9,Arquivos Alterados*
+	; csw:label:1,18,9,Arquivos Alterados*
 	;
-	; csw:botao:50,11,btCriaCriar,A<u>d</u>icionar,d,2010^YYCFVOS020,,Adicionar Rotinas Criadas,10
-	; csw:botao:50,13,btCriaEditar,Ed<u>i</u>tar,i,2020^YYCFVOS020,,Editar Rotinas Criadas,10
-	; csw:botao:50,15,btCriaExcluir,Exc<u>l</u>uir,l,2050^YYCFVOS020,,Excluir Rotinas Criadas,10
+	; csw:botao:10,17,btCriaCriar,A<u>d</u>icionar,d,2010^YYCFVOS020,,Adicionar Rotinas Criadas,10
+	; csw:botao:22,17,btCriaEditar,️Ed<u>i</u>tar,i,2020^YYCFVOS020,,Editar Rotinas Criadas,10
+	; csw:botao:34,17,btCriaExcluir,Exc<u>l</u>uir,l,2070^YYCFVOS020,,Excluir Rotinas Criadas,10
 	;
-	; csw:botao:50,18,btEditCriar,<u>A</u>dicionar,a,2110^YYCFVOS020,,Adicionar Rotinas Modificadas,10
-	; csw:botao:50,20,btEditEditar,Edita<u>r</u>,r,2120^YYCFVOS020,,Editar Rotinas Modificadas,10
-	; csw:botao:50,22,btEditExcluir,E<u>x</u>cluir,x,2130^YYCFVOS020,,Excluir Rotinas Modificadas,10
+	; csw:botao:10,25,btEditCriar,<u>A</u>dicionar,a,2110^YYCFVOS020,,Adicionar Rotinas Modificadas,10
+	; csw:botao:22,25,btEditEditar,Edita<u>r</u>,r,2120^YYCFVOS020,,Editar Rotinas Modificadas,10
+	; csw:botao:34,25,btEditExcluir,E<u>x</u>cluir,x,2170^YYCFVOS020,,Excluir Rotinas Modificadas,10
 	;
-	; csw:btnManter:10,25,3000^YYCFVOS020,0500^YYCFVOS020,Excluir^YYCFVOS020
+	; csw:btnManter:10,27,3000^YYCFVOS020,0500^YYCFVOS020,Excluir^YYCFVOS020
 	;
 	; csw:labelcreate:YYCFVOS020
 	; csw:labeldestroy:9999
