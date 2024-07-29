@@ -1,0 +1,81 @@
+GCTRESU610(CODITEM,CODDES)	; CFV 07/2024  - VISUALIZAR DESENHO
+	;
+	#include %CSUTICSP
+	;
+	;
+0000	do New^%CSW1UTI("%PRG,CAMARQ,CT,GCTRPDC010,GCTRPDC05,NOMARQ,sc")
+	new %PRG,CAMARQ,CT,GCTRPDC010,GCTRPDC05,NOMARQ,sc
+	;
+	set %PRG="GCTRESU610",CT=%index
+	;
+	set sc=$$ValidarExecucaoCSW^CCUTIRG001()
+	if sc'=1 do  quit
+	. do ME^%CSUTICSP(sc)
+	. do FJ^%CSW1UTI
+	;
+	; csw:aj:108,28
+	do AJ^%CSUTIUD(,,"Visualizar Desenho")
+	;
+	if '$data(CODITEM)!'$data(CODDES) do ME^%CSUTIUD("Parâmetros Nulos!") goto 9999
+	;
+	; Inicializa
+	;
+0500	;
+	do 9000,8000
+	quit
+	;
+	; Display
+	;
+8000	set sc=$$ObterDados^GCTRESU005RG(CE,CODITEM,CODDES,.GCTRPDC05)
+	;
+	set sc=$$VerConfiguracao^GCTRESU010RG(CE,$piece(GCTRPDC05,Z,4),.GCTRPDC010)
+	;
+	set CAMARQ=$piece(GCTRPDC010,Z,4)
+	set NOMARQ=$piece(CAMARQ,"/",*)
+	;
+	if $extract(CAMARQ,1,4)="http" do
+	. do $zf(-1,"wget -O /InterSystems/cache/csp/tmp/"_NOMARQ_" "_CAMARQ)
+	. ;do $zf(-1,"chmod 777 /InterSystems/cache/csp/tmp/"_NOMARQ)
+	else  do ##class(%File).CopyFile(CAMARQ,"/InterSystems/cache/csp/tmp/"_NOMARQ)
+	;
+	if $zconvert($piece(GCTRPDC010,Z,5),"U")=".PDF" do  goto 9999
+	. do download^%CSW1D("/InterSystems/cache/csp/tmp/"_NOMARQ)
+	else  do CaminhoImg^%CSW1A("imgDesenho","/csp/tmp/"_NOMARQ)
+	;
+	quit
+	;
+	; Tela
+	;
+9000	do Clear^%CSW1UTI()
+	do Disable^%CSW1UTI()
+	do VisibleCp^%CSW1UTI("imgDesenho","true")
+	;
+	quit
+	;
+	; Fim
+	;
+9999	;do ##class(%Library.File).Delete("/InterSystems/cache/csp/tmp/"_NOMARQ)
+	;
+	do FJ^%CSUTIUD
+	do FJ^%CSW1UTI
+	quit
+	;
+	; Metodo Validate()
+	;
+Validate()	;
+	quit:'$$CSP^%CSW1UTI() 1
+	quit 1
+	;
+	; Metodo Show
+	;
+Show(%cswP1,%cswP2,%cswP3,%cswP4)	;
+	do Show^%CSW1UTI("GCTRESU610",$get(%cswP1),$get(%cswP2),$get(%cswP3),$get(%cswP4))
+	quit
+	;
+	; csw:label:1,2,11,Arquivo Anexo*
+	; 
+	; csw:imagem:imgDesenho,5,80,28,12,,1
+	;
+	; csw:labelcreate:GCTRESU610
+	; csw:labeldestroy:9999
+	; csw:csp:gerar
